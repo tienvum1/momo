@@ -13,7 +13,6 @@ const AccountantQRManager = () => {
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
   // Form states
-  const [mainImageFile, setMainImageFile] = useState(null);
   const [qrImageFile, setQrImageFile] = useState(null);
   const [maxAmount, setMaxAmount] = useState('');
 
@@ -51,14 +50,13 @@ const AccountantQRManager = () => {
         ? Math.round(qr.max_amount_per_trans).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
         : ''
     );
-    setMainImageFile(null);
     setQrImageFile(null);
   };
 
   const resetForm = () => {
     setEditingQr(null);
     setMaxAmount('');
-    setMainImageFile(null); setQrImageFile(null);
+    setQrImageFile(null);
   };
 
   const handleSubmit = async (e) => {
@@ -67,7 +65,6 @@ const AccountantQRManager = () => {
     setSubmitting(true);
 
     const formData = new FormData();
-    if (mainImageFile) formData.append('main_image', mainImageFile);
     if (qrImageFile) formData.append('qr_image', qrImageFile);
     formData.append('max_amount_per_trans', maxAmount.replace(/\./g, ''));
 
@@ -109,10 +106,6 @@ const AccountantQRManager = () => {
             <p>{editingQr.name}</p>
           </div>
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-               <label>Ảnh đại diện (để trống nếu không đổi)</label>
-               <input type="file" accept="image/*" onChange={(e) => setMainImageFile(e.target.files[0])} />
-             </div>
              <div className="form-group">
                <label>Ảnh mã QR (để trống nếu không đổi)</label>
                <input type="file" accept="image/*" onChange={(e) => setQrImageFile(e.target.files[0])} />

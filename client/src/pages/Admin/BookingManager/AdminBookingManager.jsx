@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, Trash2,
-  Check, X
+  Search, Trash2
 } from 'lucide-react';
 import api from '../../../api/axios';
 import { toast } from 'react-hot-toast';
