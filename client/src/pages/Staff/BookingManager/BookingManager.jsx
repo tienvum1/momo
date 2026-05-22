@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   BarChart3, Clock, CheckCircle2,
   XCircle, UserPlus, Users, Search,
-  Check, X
 } from 'lucide-react';
 import api from '../../../api/axios';
 import { toast } from 'react-hot-toast';

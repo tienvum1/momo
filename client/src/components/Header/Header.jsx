@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User, LogOut, Settings, HelpCircle, Menu, X, BarChart2, ShoppingCart,  LayoutDashboard } from 'lucide-react';
+import { User, LogOut, Menu, X, BarChart2, ShoppingCart,  LayoutDashboard } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 import './Header.scss';
 

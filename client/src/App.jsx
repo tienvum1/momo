@@ -73,7 +73,7 @@ function App() {
         if (userData) {
           initSocket(userData);
         }
-      } catch (err) {
+      } catch (error) {
         // Token hết hạn hoặc không hợp lệ — xóa khỏi storage
         localStorage.removeItem('token');
         localStorage.removeItem('user');

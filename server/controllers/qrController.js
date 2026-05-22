@@ -114,6 +114,22 @@ const updateQR = async (req, res) => {
   }
 };
 
+// Lấy tất cả QR (cho admin/staff) - Ưu tiên ready hiện đầu tiên
+const getAllQRs = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT q.*, u.full_name as creator_name 
+      FROM qrs q 
+      LEFT JOIN users u ON q.creator_id = u.id 
+      ORDER BY (CASE WHEN q.status = 'ready' THEN 1 ELSE 2 END) ASC, q.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách QR' });
+  }
+};
+
 // Lấy danh sách QR sẵn sàng cho người dùng
 const getReadyQRs = async (req, res) => {
   try {
@@ -253,22 +269,6 @@ const deleteQR = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Lỗi server khi xóa QR' });
-  }
-};
-
-// Lấy danh sách QR (có thể filter theo người tạo)
-const getAllQRs = async (req, res) => {
-  try {
-    const [rows] = await pool.query(`
-      SELECT q.*, u.full_name as creator_name 
-      FROM qrs q 
-      JOIN users u ON q.creator_id = u.id 
-      ORDER BY q.created_at DESC
-    `);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Lỗi server khi lấy danh sách QR' });
   }
 };
 
