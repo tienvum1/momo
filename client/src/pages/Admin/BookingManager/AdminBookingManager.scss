@@ -550,93 +550,181 @@
     }
 }
 
+// Visibility helpers
+.desktop-only {
+    @media (max-width: 768px) {
+        display: none !important;
+    }
+}
+
+.mobile-only {
+    display: none !important;
+
+    @media (max-width: 768px) {
+        display: block !important;
+    }
+}
+
 // Mobile Card View
-@media (max-width: 768px) {
-    .table-shell {
-        background: transparent;
-        border: none;
-        box-shadow: none;
-        overflow: visible;
+.booking-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0; // Removed gap to use margins on cards instead
+    background: transparent; // Changed from #e2e8f0
+    border: none; // Removed container border
+    border-radius: 0;
+    overflow: visible;
+    margin-bottom: 24px;
+
+    .empty {
+        padding: 40px;
+        text-align: center;
+        background: white;
+        color: #64748b;
     }
 
-    .booking-table {
-        display: block;
-        min-width: 0;
+    .booking-mobile-card {
+        background: white;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        border: 1px solid #e2e8f0;
+        margin: 8px;
+        border-radius: 12px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
-        thead {
-            display: none;
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            .date {
+                font-size: 13px;
+                color: #94a3b8;
+                font-weight: 500;
+            }
+
+            .amount {
+                font-size: 16px;
+                font-weight: 800;
+                color: #1e3a8a; // Dark blue
+            }
         }
 
-        tbody {
+        .card-middle {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
+            justify-content: space-between;
+            align-items: center;
 
-            tr {
+            .code {
+                font-size: 14px;
+                font-weight: 600;
+                color: #334155;
+                font-family: 'JetBrains Mono', monospace;
+            }
+
+            .validation-mobile {
+                font-size: 13px;
                 display: flex;
-                flex-direction: column;
-                background: #ffffff;
-                border-radius: 16px;
-                padding: 16px;
-                border: 1px solid #e2e8f0;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-                gap: 10px;
+                align-items: center;
+                gap: 4px;
 
-                td {
-                    display: grid;
-                    grid-template-columns: 110px 1fr;
-                    align-items: start;
-                    padding: 10px 0;
+                .label {
+                    color: #94a3b8;
+                    font-weight: 500;
+                }
+
+                .valid-yes {
+                    color: #15803d;
+                    font-weight: 700;
+                }
+
+                .valid-no {
+                    color: #dc2626;
+                    font-weight: 700;
+                }
+
+                .valid-none {
+                    color: #cbd5e1;
+                }
+            }
+        }
+
+        .card-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            .status-badge-mobile {
+                padding: 4px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 600;
+                background: #f1f5f9;
+                color: #64748b;
+
+                &.unclaimed {
+                    background: #f1f5f9;
+                    color: #64748b;
+                }
+
+                &.completed,
+                &.staff_confirmed {
+                    background: #ecfdf5;
+                    color: #059669;
+                }
+
+                &.rejected,
+                &.cancelled {
+                    background: #fef2f2;
+                    color: #dc2626;
+                }
+            }
+
+            .card-actions {
+                display: flex;
+                gap: 8px;
+
+                .claim-btn-mobile {
+                    background: #22c55e; // Green
+                    color: white;
                     border: none;
-                    gap: 8px;
-                    border-bottom: 1px dashed #f1f5f9;
-                    position: static !important;
-                    background: transparent !important;
-                    box-shadow: none !important;
-                    width: 100% !important;
-                    text-align: left !important;
+                    padding: 6px 20px;
+                    border-radius: 6px;
+                    font-weight: 700;
+                    font-size: 14px;
+                    cursor: pointer;
 
-                    &::before {
-                        content: attr(data-label);
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: #94a3b8;
-                        text-transform: uppercase;
-                        padding-top: 2px;
-                        text-align: left;
+                    &:hover {
+                        background: #16a34a;
                     }
+                }
 
-                    &>div,
-                    &>span,
-                    &>strong {
-                        text-align: left !important;
-                        font-weight: 600;
-                        color: #1e293b;
-                    }
+                .detail-btn-mobile {
+                    background: #f1f5f9;
+                    color: #475569;
+                    border: 1px solid #e2e8f0;
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    font-weight: 600;
+                    font-size: 13px;
+                    cursor: pointer;
+                }
 
-                    &:last-child {
-                        display: flex;
-                        flex-direction: row;
-                        margin-top: 8px;
-                        padding: 12px 0 0 0;
-                        border-top: 1px solid #f1f5f9;
-                        border-bottom: none;
+                .delete-btn-mobile {
+                    background: #fef2f2;
+                    color: #ef4444;
+                    border: 1px solid #fee2e2;
+                    padding: 6px;
+                    border-radius: 6px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
 
-                        &::before {
-                            display: none;
-                        }
-
-                        .row-actions {
-                            flex: 1;
-                            width: 100%;
-                            justify-content: stretch;
-
-                            .detail-view-btn {
-                                width: 100%;
-                                justify-content: center;
-                                padding: 12px;
-                            }
-                        }
+                    &:hover {
+                        background: #fee2e2;
                     }
                 }
             }

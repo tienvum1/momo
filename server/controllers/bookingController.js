@@ -578,6 +578,8 @@ const getStaffStats = async (req, res) => {
         whereSql += " AND b.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
       } else if (dateRange === "30days") {
         whereSql += " AND b.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+      } else if (dateRange === "thisMonth") {
+        whereSql += " AND MONTH(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = MONTH(CONVERT_TZ(NOW(), '+00:00', '+07:00')) AND YEAR(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
       }
     }
 
@@ -765,6 +767,8 @@ const staffGetBookings = async (req, res) => {
         whereSql += " AND b.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
       } else if (dateRange === "30days") {
         whereSql += " AND b.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+      } else if (dateRange === "thisMonth") {
+        whereSql += " AND MONTH(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = MONTH(CONVERT_TZ(NOW(), '+00:00', '+07:00')) AND YEAR(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
       }
     }
 

@@ -36,6 +36,7 @@ const AdminBookingManager = () => {
     { label: 'Hôm nay', value: 'today' },
     { label: '7 ngày qua', value: '7days' },
     { label: '30 ngày qua', value: '30days' },
+    { label: 'Tháng này', value: 'thisMonth' },
   ];
 
   const filterParams = useCallback(() => ({
@@ -96,7 +97,12 @@ const AdminBookingManager = () => {
     if (!value) return '—';
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return '—';
-    return d.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   const statusLabel = (status) => {
@@ -275,8 +281,8 @@ const AdminBookingManager = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="table-shell">
+      {/* Desktop Table */}
+      <div className="table-shell desktop-only">
         <table className="booking-table">
           <thead>
             <tr>
@@ -363,6 +369,55 @@ const AdminBookingManager = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card List */}
+      <div className="booking-mobile-list mobile-only">
+        {loading ? (
+          <div className="loading-skeleton">
+            {[...Array(5)].map((_, i) => <div key={i} className="skeleton-item" />)}
+          </div>
+        ) : bookings.length === 0 ? (
+          <div className="empty">Không có dữ liệu đơn hàng.</div>
+        ) : (
+          bookings.map((b) => (
+            <div key={b.id} className="booking-mobile-card">
+              <div className="card-top">
+                <span className="date">{formatDateTime(b.created_at)}</span>
+                <span className="amount">{formatMoney(b.transfer_amount)} đ</span>
+              </div>
+              <div className="card-middle">
+                <span className="code">{shortCode(b.code)}</span>
+                <div className="validation-mobile">
+                  <span className="label">Xác nhận: </span>
+                  {b.is_valid === 'yes'
+                    ? <span className="valid-yes">✓ Có</span>
+                    : b.is_valid === 'no'
+                      ? <span className="valid-no">✗ Không</span>
+                      : <span className="valid-none">—</span>}
+                </div>
+              </div>
+              <div className="card-bottom">
+                <div className={`status-badge-mobile ${b.status === 'customer_paid' && !b.staff_id ? 'unclaimed' : b.status}`}>
+                  {b.status === 'customer_paid' && !b.staff_id ? 'Chưa nhận' : statusLabel(b.status)}
+                </div>
+                <div className="card-actions">
+                  {b.status === 'customer_paid' && !b.staff_id && (
+                    <button className="claim-btn-mobile" onClick={() => setConfirmModal({ isOpen: true, bookingId: b.id, shortCode: shortCode(b.code) })}>
+                      Nhận
+                    </button>
+                  )}
+                  <button className="detail-btn-mobile" onClick={() => navigate(`/admin/bookings/${b.id}`)}>
+                    Chi tiết
+                  </button>
+                  <button className="delete-btn-mobile" onClick={() => setDeleteModal({ isOpen: true, bookingId: b.id, shortCode: shortCode(b.code) })} title="Xóa đơn">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {renderPagination()}
