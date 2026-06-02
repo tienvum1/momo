@@ -1,9 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  BarChart3, Clock, CheckCircle2,
-  XCircle, UserPlus, Users, Search,
-} from 'lucide-react';
 import api from '../../../api/axios';
 import { toast } from 'react-hot-toast';
 import './BookingManager.scss';
@@ -31,7 +27,7 @@ const BookingManager = () => {
   const [dateFilter, setDateFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   const dateOptions = [
     { label: 'Tất cả thời gian', value: 'all' },
@@ -190,56 +186,48 @@ const BookingManager = () => {
     <div className="staff-booking-page">
       <div className="stats-grid">
         <div className="stat-card total">
-          <div className="stat-icon"><BarChart3 size={24} /></div>
           <div className="stat-info">
             <span className="stat-label">Tổng đơn</span>
             <span className="stat-value">{stats.total}</span>
           </div>
         </div>
         <div className="stat-card pending">
-          <div className="stat-icon"><UserPlus size={24} /></div>
           <div className="stat-info">
             <span className="stat-label">Mới tạo</span>
             <span className="stat-value">{stats.pending_claim}</span>
           </div>
         </div>
         <div className="stat-card processing">
-          <div className="stat-icon"><Clock size={24} /></div>
           <div className="stat-info">
             <span className="stat-label">Đang xử lý</span>
             <span className="stat-value">{stats.processing}</span>
           </div>
         </div>
         <div className="stat-card completed">
-          <div className="stat-icon"><CheckCircle2 size={24} /></div>
           <div className="stat-info">
             <span className="stat-label">Đã hoàn thành</span>
             <span className="stat-value">{stats.completed}</span>
           </div>
         </div>
         <div className="stat-card rejected">
-          <div className="stat-icon"><XCircle size={24} /></div>
           <div className="stat-info">
             <span className="stat-label">Bị từ chối</span>
             <span className="stat-value">{stats.rejected}</span>
           </div>
         </div>
         <div className="stat-card cancelled">
-          <div className="stat-icon"><XCircle size={24} /></div>
           <div className="stat-info">
             <span className="stat-label">Đã hủy</span>
             <span className="stat-value">{stats.cancelled ?? 0}</span>
           </div>
         </div>
         <div className="stat-card amount">
-          <div className="stat-icon"><BarChart3 size={24} /></div>
           <div className="stat-info">
             <span className="stat-label">Tổng tiền chuyển</span>
             <span className="stat-value">{formatMoney(stats.total_revenue)}</span>
           </div>
         </div>
         <div className="stat-card fee">
-          <div className="stat-icon"><BarChart3 size={24} /></div>
           <div className="stat-info">
             <span className="stat-label">Tổng phí dịch vụ</span>
             <span className="stat-value">{formatMoney(stats.total_fee)}</span>
@@ -255,7 +243,6 @@ const BookingManager = () => {
 
         <div className="booking-controls">
           <div className="search-box">
-            <Search size={18} />
             <input
               value={searchTerm}
               onChange={(e) => {
@@ -334,7 +321,7 @@ const BookingManager = () => {
         </div>
       </div>
 
-      <div className="table-shell">
+      <div className="table-shell desktop-only">
         <table className="booking-table">
           <thead>
             <tr>
@@ -361,7 +348,6 @@ const BookingManager = () => {
               <tr>
                 <td colSpan={10}>
                   <div className="empty-state">
-                    <Search size={48} />
                     <p>Không có dữ liệu phù hợp.</p>
                   </div>
                 </td>
@@ -384,7 +370,6 @@ const BookingManager = () => {
                   <td data-label="Nhân viên">
                     {b.staff_id ? (
                       <div className="staff-cell">
-                        <Users size={14} />
                         <span>{b.staff_name || `ID: ${b.staff_id}`}</span>
                       </div>
                     ) : (
@@ -434,6 +419,53 @@ const BookingManager = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="booking-mobile-list mobile-only">
+        {loading ? (
+          <div className="loading-skeleton">
+            {[...Array(5)].map((_, i) => <div key={i} className="skeleton-item" />)}
+          </div>
+        ) : bookings.length === 0 ? (
+          <div className="empty">Không có dữ liệu đơn hàng.</div>
+        ) : (
+          bookings.map((b) => (
+            <div key={b.id} className="booking-mobile-card">
+              <div className="card-top">
+                <span className="date">{formatDateTime(b.created_at)}</span>
+                <span className="amount">{formatMoney(b.transfer_amount)} đ</span>
+              </div>
+              <div className="card-middle">
+                <div className="code-wrapper">
+                  <span className="code">{shortCode(b.code)}</span>
+                </div>
+                <div className="validation-mobile">
+                  <span className="label">Xác nhận: </span>
+                  {b.is_valid === 'yes'
+                    ? <span className="valid-yes">✓ Có</span>
+                    : b.is_valid === 'no'
+                      ? <span className="valid-no">✗ Không</span>
+                      : <span className="valid-none">—</span>}
+                </div>
+              </div>
+              <div className="card-bottom">
+                <div className={`status-badge-mobile ${b.status}`}>
+                  {statusLabel(b.status)}
+                </div>
+                <div className="card-actions">
+                  {b.status === 'customer_paid' && !b.staff_id && (
+                    <button className="claim-btn-mobile" onClick={() => setConfirmModal({ isOpen: true, bookingId: b.id, shortCode: shortCode(b.code) })}>
+                      Xử lý
+                    </button>
+                  )}
+                  <button className="detail-btn-mobile" onClick={() => navigate(`/staff/bookings/${b.id}`)}>
+                    Chi tiết
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {renderPagination()}

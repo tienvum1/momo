@@ -173,13 +173,26 @@ const RevenueReport = () => {
   };
 
   return (
-    <div className="revenue-report-container full-width">
+    <div className="revenue-report-container">
       {/* Header */}
-      <div className="report-header centered">
-        <div className="header-top">
+      <div className="report-header">
+        <div className="header-left">
           <h1>{isAdminPath ? 'Thống kê hệ thống' : 'Báo cáo doanh thu cá nhân'}</h1>
           <p className="subtitle">{isAdminPath ? 'Toàn cảnh hoạt động kinh doanh' : 'Theo dõi và phân tích hiệu suất'}</p>
         </div>
+
+        {/* Period filter */}
+        {!loading && (
+          <div className="header-actions">
+            <div className="period-filter">
+              {['day','month','year'].map(t => (
+                <button key={t} className={reportType === t ? 'active' : ''} onClick={() => setReportType(t)}>
+                  {t === 'day' ? 'Ngày' : t === 'month' ? 'Tháng' : 'Năm'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -189,36 +202,24 @@ const RevenueReport = () => {
         </div>
       ) : (
         <div className="report-content-animate">
-
-          {/* Period filter */}
-          <div className="filter-container-row">
-            <div className="period-filter">
-              {['day','month','year'].map(t => (
-                <button key={t} className={reportType === t ? 'active' : ''} onClick={() => setReportType(t)}>
-                  {t === 'day' ? 'Ngày' : t === 'month' ? 'Tháng' : 'Năm'}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Summary cards */}
           <div className="stats-summary">
             <div className="stat-card revenue">
               <div className="stat-info">
-                <span className="label">Tổng doanh thu ({periodLabel})</span>
+                <span className="label">Doanh thu ({periodLabel})</span>
                 <p className="value">{fmtShort(totalRevenue)} <small>đ</small></p>
               </div>
             </div>
             <div className="stat-card fee">
               <div className="stat-info">
-                <span className="label">Tổng phí khách chịu ({periodLabel})</span>
+                <span className="label">Phí khách ({periodLabel})</span>
                 <p className="value">{fmtShort(totalFee)} <small>đ</small></p>
               </div>
             </div>
             {isAdminPath && (
               <div className="stat-card base-fee">
                 <div className="stat-info">
-                  <span className="label">Tổng phí gốc ({periodLabel})</span>
+                  <span className="label">Phí gốc ({periodLabel})</span>
                   <p className="value">{fmtShort(totalBaseFee)} <small>đ</small></p>
                 </div>
               </div>
@@ -233,7 +234,7 @@ const RevenueReport = () => {
             )}
             <div className="stat-card orders">
               <div className="stat-info">
-                <span className="label">Đơn hoàn thành ({periodLabel})</span>
+                <span className="label">Đơn hoàn tất ({periodLabel})</span>
                 <p className="value">{totalOrders.toLocaleString()} <small>đơn</small></p>
               </div>
             </div>

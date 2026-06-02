@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from '../../../api/axios';
-import { Search, Plus, Trash2, Edit2, XCircle, CheckCircle2 } from 'lucide-react';
+import { Search, Plus, Trash2, Edit2, XCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import './CardManager.scss';
 
@@ -250,30 +250,30 @@ export default function CardManager() {
                 <tr><td colSpan={19} className="cm-empty">Không có dữ liệu</td></tr>
               ) : cards.map((c, i) => (
                 <tr key={c.id} className={c.is_done ? 'row-done' : ''}>
-                  <td>{i + 1}</td>
-                  <td><span className={`type-badge type-${c.card_type?.replace(' ', '-')}`}>{c.card_type}</span></td>
-                  <td className="name-cell">{c.customer_name}</td>
-                  <td>{c.bank_name}</td>
-                  <td className="mono">{c.card_last_4 || '—'}</td>
-                  <td className="num bold">{fmt(c.credit_limit)}</td>
-                  <td className="num bold">{fmt(c.roll_amount)}</td>
-                  <td className="num">{fmtPct(c.fee_percent)}</td>
-                  <td className="num">{fmtPct(c.bank_fee_percent)}</td>
-                  <td className="num fee">{fmt(c.fee_vnd)}</td>
-                  <td className="num profit">{fmt(c.profit)}</td>
-                  <td className="center">{c.statement_date_full || '—'}</td>
-                  <td className="center">{c.due_date_full || '—'}</td>
-                  <td className="center">{c.roll_date_fmt || '—'}</td>
-                  <td className="num">
+                  <td data-label="STT">{i + 1}</td>
+                  <td data-label="Loại"><span className={`type-badge type-${c.card_type?.replace(' ', '-')}`}>{c.card_type}</span></td>
+                  <td data-label="Tên khách" className="name-cell">{c.customer_name}</td>
+                  <td data-label="Ngân hàng">{c.bank_name}</td>
+                  <td data-label="4 số cuối" className="mono">{c.card_last_4 || '—'}</td>
+                  <td data-label="Hạn mức" className="num bold">{fmt(c.credit_limit)}</td>
+                  <td data-label="Số tiền đáo" className="num bold">{fmt(c.roll_amount)}</td>
+                  <td data-label="Phí %" className="num">{fmtPct(c.fee_percent)}</td>
+                  <td data-label="Phí Bank %" className="num">{fmtPct(c.bank_fee_percent)}</td>
+                  <td data-label="Phí VNĐ" className="num fee">{fmt(c.fee_vnd)}</td>
+                  <td data-label="Lợi nhuận" className="num profit">{fmt(c.profit)}</td>
+                  <td data-label="Ngày sao kê" className="center">{c.statement_date_full || '—'}</td>
+                  <td data-label="Ngày đến hạn" className="center">{c.due_date_full || '—'}</td>
+                  <td data-label="Ngày đáo" className="center">{c.roll_date_fmt || '—'}</td>
+                  <td data-label="Còn lại" className="num">
                     {c.days_left !== null ? (
                       <span className={`days-badge ${c.days_left <= 3 ? 'danger' : c.days_left <= 7 ? 'warn' : 'safe'}`}>
                         {c.days_left}
                       </span>
                     ) : '—'}
                   </td>
-                  <td><span className={`status-badge ${statusClass(c.status_label)}`}>{c.status_label}</span></td>
-                  <td className="note-cell">{c.note || '—'}</td>
-                  <td className="center">
+                  <td data-label="Trạng thái"><span className={`status-badge ${statusClass(c.status_label)}`}>{c.status_label}</span></td>
+                  <td data-label="Ghi chú" className="note-cell">{c.note || '—'}</td>
+                  <td data-label="Xong" className="center">
                     <button
                       className={`done-btn ${c.is_done ? 'done' : ''}`}
                       onClick={() => handleToggleDone(c.id)}
@@ -281,7 +281,7 @@ export default function CardManager() {
                       {c.is_done ? 'Xong' : 'Chưa xong'}
                     </button>
                   </td>
-                  <td>
+                  <td data-label="Hành động">
                     <div className="cm-actions">
                       <button className="cm-btn edit" onClick={() => openEdit(c)} title="Sửa"><Edit2 size={14} /></button>
                       <button className="cm-btn del" onClick={() => handleDelete(c.id)} title="Xóa"><Trash2 size={14} /></button>

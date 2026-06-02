@@ -1,10 +1,18 @@
 .staff-qr-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 28px 18px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-sizing: border-box;
+  font-family: 'Google Sans', 'Inter', system-ui, sans-serif;
+
+  @media (max-width: 768px) {
+    padding: 0;
+    background: transparent;
+  }
 }
 
 .loading {
@@ -113,10 +121,6 @@
     vertical-align: middle;
     color: #0f172a;
     font-size: 14px;
-  }
-
-  tbody tr:nth-child(2n) td {
-    background: rgba(248, 250, 252, 0.55);
   }
 
   .empty {
@@ -464,24 +468,46 @@
 
 @media (max-width: 768px) {
   .staff-qr-page {
-    padding: 16px;
+    padding: 0;
   }
 
   .qr-toolbar {
     flex-direction: column;
-    align-items: stretch;
-    padding: 20px;
-    gap: 20px;
+    align-items: center;
+    padding: 24px 16px;
+    gap: 16px;
+    width: 100%;
+    margin: 0 0 8px 0;
+    border-radius: 12px;
+    border-left: none;
+    border-right: none;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .qr-title {
+    text-align: center;
+
+    h1 {
+      font-size: 20px;
+    }
+
+    p {
+      font-size: 12px;
+    }
   }
 
   .qr-controls {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 10px;
+    width: 100%;
 
     select,
     .primary-btn {
       width: 100%;
+      padding: 10px;
+      font-size: 13px;
     }
   }
 
@@ -490,10 +516,12 @@
     border: none;
     box-shadow: none;
     overflow: visible;
+    width: 100%;
   }
 
   .qr-table {
     display: block;
+    width: 100%;
 
     thead {
       display: none;
@@ -502,37 +530,45 @@
     tbody {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 6px; // Compact gap
+      width: 100%;
 
       tr {
         display: flex;
         flex-direction: column;
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 20px;
+        background: #ffffff !important; // Force white background for all rows
+        border-radius: 0; // Stretch edge to edge
+        padding: 6px 12px; // Ultra compact padding
         border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        gap: 12px;
+        border-left: none;
+        border-right: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        gap: 4px; // Compact gap
+        width: 100%;
+        box-sizing: border-box;
 
         td {
           display: flex;
           flex-direction: row;
           justify-content: flex-start;
-          align-items: flex-start;
+          align-items: center;
           padding: 0;
           border: none;
-          font-size: 14px;
+          font-size: 13px;
           gap: 12px;
+          width: 100%;
+          background: transparent !important; // Ensure cell doesn't have its own background
 
           &::before {
             content: attr(data-label);
-            width: 120px;
+            width: 40%; // Label column 40%
             flex-shrink: 0;
             font-size: 11px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            padding-top: 3px;
+            font-weight: 900; // Bold
+            color: #000000 !important; // Absolute black
+            text-transform: none; // No uppercase
+            padding-top: 0;
+            opacity: 1 !important;
           }
 
           &.td-stt,
@@ -548,14 +584,19 @@
 
           .qr-cell {
             justify-content: flex-start;
+            width: 60%; // Value column 60%
           }
 
           .fee-badge {
             margin: 0;
+            font-size: 11px;
+            padding: 2px 6px;
           }
 
           .status-toggle-btn {
             text-align: left;
+            padding: 4px 10px;
+            font-size: 11px;
           }
 
           &>div,
@@ -567,11 +608,17 @@
 
           &.td-actions {
             justify-content: flex-end;
-            padding-top: 12px;
+            padding-top: 8px;
             border-top: 1px solid #f1f5f9;
+            margin-top: 4px;
 
             &::before {
               display: none;
+            }
+
+            .ghost-btn {
+              padding: 4px 10px;
+              font-size: 12px;
             }
           }
         }
