@@ -4,7 +4,8 @@ const bcrypt = require('bcryptjs');
 // Lấy danh sách tất cả người dùng và thống kê
 exports.getAllUsers = async (req, res) => {
   try {
-    const { search, role, status } = req.query;
+    const { search, role, status, page = 1, limit = 20 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
     
     // Thống kê số lượng theo vai trò
     const [stats] = await pool.query(`
@@ -17,31 +18,43 @@ exports.getAllUsers = async (req, res) => {
       FROM users
     `);
 
-    let query = 'SELECT id, email, phone, full_name, role, level, status, is_verified, created_at FROM users WHERE 1=1';
+    let whereSql = " WHERE 1=1";
     const params = [];
 
     if (search) {
-      query += ' AND (email LIKE ? OR full_name LIKE ?)';
+      whereSql += ' AND (email LIKE ? OR full_name LIKE ?)';
       params.push(`%${search}%`, `%${search}%`);
     }
 
     if (role) {
-      query += ' AND role = ?';
+      whereSql += ' AND role = ?';
       params.push(role);
     }
 
     if (status) {
-      query += ' AND status = ?';
+      whereSql += ' AND status = ?';
       params.push(status);
     }
 
-    query += ' ORDER BY created_at DESC';
+    // Đếm tổng số user thỏa mãn điều kiện lọc để phân trang
+    const [totalRows] = await pool.query(`SELECT COUNT(*) as total FROM users ${whereSql}`, params);
+    const totalItems = totalRows[0].total;
+
+    let query = `SELECT id, email, phone, full_name, role, level, status, is_verified, created_at FROM users ${whereSql}`;
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), offset);
 
     const [rows] = await pool.query(query, params);
     res.json({ 
       success: true, 
       data: rows,
-      stats: stats[0]
+      stats: stats[0],
+      pagination: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / parseInt(limit)),
+        currentPage: parseInt(page),
+        limit: parseInt(limit)
+      }
     });
   } catch (error) {
     console.error('Get All Users Error:', error);

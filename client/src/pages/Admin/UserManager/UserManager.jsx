@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../../api/axios';
 import { 
-  Search, Plus, User, AlertCircle, 
+  Search, Plus, AlertCircle, 
   Edit2, XCircle, Shield, 
   Unlock, Lock, Users, UserCheck, UserPlus, ShieldCheck,
   Eye, EyeOff
@@ -22,6 +22,9 @@ const UserManager = () => {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 20;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -49,11 +52,14 @@ const UserManager = () => {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/admin/users?search=${search}&role=${roleFilter}&status=${statusFilter}`);
+      const response = await api.get(`/admin/users?search=${search}&role=${roleFilter}&status=${statusFilter}&page=${currentPage}&limit=${itemsPerPage}`);
       if (response.data.success) {
         setUsers(response.data.data);
         if (response.data.stats) {
           setStats(response.data.stats);
+        }
+        if (response.data.pagination) {
+          setTotalPages(response.data.pagination.totalPages);
         }
       }
     } catch (error) {
@@ -63,13 +69,10 @@ const UserManager = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, roleFilter, statusFilter]);
+  }, [search, roleFilter, statusFilter, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    const init = async () => {
-      await fetchUsers();
-    };
-    init();
+    fetchUsers();
   }, [fetchUsers]);
 
   const handleOpenModal = (user = null) => {
@@ -97,6 +100,64 @@ const UserManager = () => {
       });
     }
     setIsModalOpen(true);
+  };
+
+  const handlePageChange = (p) => {
+    setCurrentPage(p);
+    window.scrollTo(0, 0);
+  };
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    const pages = [];
+    const maxVisible = 5;
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+
+    return (
+      <div className="pagination">
+        <button 
+          type="button" 
+          className="page-btn" 
+          disabled={currentPage === 1} 
+          onClick={() => handlePageChange(currentPage - 1)}
+        >
+          Trước
+        </button>
+        {start > 1 && (
+          <>
+            <button type="button" className="page-btn" onClick={() => handlePageChange(1)}>1</button>
+            {start > 2 && <span className="page-ellipsis">...</span>}
+          </>
+        )}
+        {pages.map(p => (
+          <button 
+            key={p} 
+            type="button" 
+            className={`page-btn ${currentPage === p ? 'active' : ''}`} 
+            onClick={() => handlePageChange(p)}
+          >
+            {p}
+          </button>
+        ))}
+        {end < totalPages && (
+          <>
+            {end < totalPages - 1 && <span className="page-ellipsis">...</span>}
+            <button type="button" className="page-btn" onClick={() => handlePageChange(totalPages)}>{totalPages}</button>
+          </>
+        )}
+        <button 
+          type="button" 
+          className="page-btn" 
+          disabled={currentPage === totalPages} 
+          onClick={() => handlePageChange(currentPage + 1)}
+        >
+          Sau
+        </button>
+      </div>
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -161,24 +222,6 @@ const UserManager = () => {
     return roles[role] || role;
   };
 
-  const getRoleBadgeClass = (role) => {
-    switch (role) {
-      case 'admin_system': return 'badge-admin';
-      case 'staff': return 'badge-staff';
-      case 'accountant': return 'badge-accountant';
-      default: return 'badge-user';
-    }
-  };
-
-  const getLevelBadgeClass = (level) => {
-    switch (Number(level)) {
-      case 3: return 'level-3';
-      case 2: return 'level-2';
-      case 1: return 'level-1';
-      default: return 'level-0';
-    }
-  };
-
   return (
     <div className="user-manager-wrapper">
       <div className="dashboard-header">
@@ -198,12 +241,18 @@ const UserManager = () => {
               type="text" 
               placeholder="Tìm theo tên, email..." 
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
           
           <div className="filter-group">
-            <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+            <select value={roleFilter} onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setCurrentPage(1);
+            }}>
               <option value="">Tất cả vai trò</option>
               <option value="admin_system">Admin</option>
               <option value="staff">Nhân viên</option>
@@ -211,7 +260,10 @@ const UserManager = () => {
               <option value="user">Khách hàng</option>
             </select>
 
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <select value={statusFilter} onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}>
               <option value="">Tất cả trạng thái</option>
               <option value="active">Đang hoạt động</option>
               <option value="locked">Đã khóa</option>
@@ -222,35 +274,35 @@ const UserManager = () => {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon total"><Users size={24} /></div>
+          <div className="stat-icon total"><Users size={20} /></div>
           <div className="stat-info">
             <span className="label">Tổng người dùng</span>
             <span className="value">{stats.total}</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon user"><UserCheck size={24} /></div>
+          <div className="stat-icon user"><UserCheck size={20} /></div>
           <div className="stat-info">
             <span className="label">Khách hàng</span>
             <span className="value">{stats.users}</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon staff"><UserPlus size={24} /></div>
+          <div className="stat-icon staff"><UserPlus size={20} /></div>
           <div className="stat-info">
             <span className="label">Nhân viên</span>
             <span className="value">{stats.staff}</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon accountant"><UserCheck size={24} /></div>
+          <div className="stat-icon accountant"><UserCheck size={20} /></div>
           <div className="stat-info">
             <span className="label">Kế toán</span>
             <span className="value">{stats.accountants}</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon admin"><ShieldCheck size={24} /></div>
+          <div className="stat-icon admin"><ShieldCheck size={20} /></div>
           <div className="stat-info">
             <span className="label">Quản trị viên</span>
             <span className="value">{stats.admins}</span>
@@ -269,7 +321,6 @@ const UserManager = () => {
             <thead>
               <tr>
                 <th>Vai trò & Quyền</th>
-                <th>Vai trò / Cấp độ</th>
                 <th>Thông tin tài khoản</th>
                 <th>Ngày tham gia</th>
                 <th>Trạng thái</th>
@@ -300,19 +351,6 @@ const UserManager = () => {
                             {user.role === 'user' ? (user.level === 0 ? 'Mặc định' : `Cấp ${user.level}`) : '—'}
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td data-label="Vai trò / Cấp độ">
-                      <div className="role-level-cell">
-                        <span className={`role-badge ${getRoleBadgeClass(user.role)}`}>
-                          <Shield size={12} style={{marginRight: '4px'}} />
-                          {getRoleLabel(user.role)}
-                        </span>
-                        {user.role === 'user' && (
-                          <span className={`level-badge ${getLevelBadgeClass(user.level)}`}>
-                            {user.level === 0 ? 'Mặc định' : `Cấp ${user.level}`}
-                          </span>
-                        )}
                       </div>
                     </td>
                     <td data-label="Thông tin tài khoản">
@@ -352,6 +390,8 @@ const UserManager = () => {
           </table>
         </div>
       )}
+
+      {renderPagination()}
 
       {/* Modal Add/Edit User */}
       {isModalOpen && (

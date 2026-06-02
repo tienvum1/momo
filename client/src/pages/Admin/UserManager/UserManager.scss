@@ -5,6 +5,16 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   width: 100%;
   box-sizing: border-box;
+  max-width: 100%; // Changed from 100vw to 100%
+  overflow-x: hidden;
+
+  * {
+    box-sizing: border-box;
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px; // Reduced padding
+  }
 
   .dashboard-header {
     display: flex;
@@ -13,6 +23,8 @@
     margin-bottom: 24px;
     flex-wrap: wrap;
     gap: 20px;
+    width: 100%;
+    overflow: hidden;
 
     .header-title {
       h1 {
@@ -95,20 +107,23 @@
       .filter-group {
         display: flex;
         gap: 8px;
+        width: 100%; // Ensure it takes full width
 
         @media (max-width: 480px) {
-          flex-direction: column;
+          flex-direction: row; // Keep row if possible, or adjust
+          gap: 4px;
         }
 
         select {
-          padding: 10px 16px;
+          padding: 10px 12px;
           border-radius: 12px;
           border: 1px solid #e2e8f0;
           background: white;
-          font-size: 14px;
+          font-size: 13px; // Smaller font for mobile
           color: #475569;
           outline: none;
-          min-width: 150px;
+          flex: 1; // Grow to fill space
+          min-width: 0; // Allow shrinking
 
           &:focus {
             border-color: #4f46e5;
@@ -120,17 +135,42 @@
 
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
     margin-bottom: 32px;
+    width: 100%;
+    box-sizing: border-box;
+
+    @media (max-width: 1200px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+
+      // First item (Total Users) takes full width
+      &>div:first-child {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 480px) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+
+      &>div:first-child {
+        grid-column: span 2;
+      }
+    }
 
     .stat-card {
       background: #f8fafc;
-      padding: 20px;
-      border-radius: 16px;
+      padding: 12px 16px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       border: 1px solid #f1f5f9;
       transition: transform 0.2s;
 
@@ -140,12 +180,18 @@
       }
 
       .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
+
+        svg {
+          width: 20px;
+          height: 20px;
+        }
 
         &.total {
           background: #e0e7ff;
@@ -176,17 +222,23 @@
       .stat-info {
         display: flex;
         flex-direction: column;
+        align-items: flex-start; // Ensure content aligns to the left
+        text-align: left; // Explicitly set text alignment
 
         .label {
-          font-size: 13px;
+          font-size: 11px;
           color: #64748b;
-          font-weight: 500;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+          white-space: nowrap;
         }
 
         .value {
-          font-size: 20px;
-          font-weight: 700;
+          font-size: 18px;
+          font-weight: 800;
           color: #1e293b;
+          line-height: 1;
         }
       }
     }
@@ -250,8 +302,8 @@
 
           .role-small {
             font-size: 11px;
-            color: #94a3b8;
-            font-weight: 500;
+            color: #1e293b; // Changed from #94a3b8 to dark blue/black
+            font-weight: 700; // Increased weight to make it stand out
           }
         }
       }
@@ -402,6 +454,49 @@
     }
   }
 
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 16px 0;
+
+    .page-btn {
+      min-width: 36px;
+      height: 36px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #475569;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover:not(:disabled) {
+        border-color: #4f46e5;
+        color: #4f46e5;
+      }
+
+      &.active {
+        background: #4f46e5;
+        border-color: #4f46e5;
+        color: #fff;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .page-ellipsis {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+  }
+
   // Mobile Responsive Table
   @media (max-width: 768px) {
     .excel-table-container {
@@ -409,10 +504,12 @@
       border: none;
       box-shadow: none;
       overflow: visible;
+      width: 100%;
 
       .excel-table {
         display: block;
         min-width: 0;
+        width: 100%;
 
         thead {
           display: none;
@@ -422,6 +519,7 @@
           display: flex;
           flex-direction: column;
           gap: 16px;
+          width: 100%;
 
           tr {
             display: flex;
@@ -432,6 +530,8 @@
             border: 1px solid #e2e8f0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             gap: 12px;
+            width: 100%;
+            box-sizing: border-box;
 
             td {
               display: flex;
@@ -456,6 +556,8 @@
                 flex: 1;
                 min-width: 0;
                 text-align: left;
+                word-break: break-word; // Fix email overflow
+                overflow-wrap: anywhere;
               }
 
               &.actions-col {
@@ -465,6 +567,11 @@
 
                 &::before {
                   display: none;
+                }
+
+                .action-btns {
+                  width: 100%;
+                  justify-content: flex-end;
                 }
               }
             }
