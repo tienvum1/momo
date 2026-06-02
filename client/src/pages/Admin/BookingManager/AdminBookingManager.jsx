@@ -21,12 +21,12 @@ const AdminBookingManager = () => {
   const [validFilter, setValidFilter] = useState('all');
   const [processingFilter, setProcessingFilter] = useState('all');
   const [accountantFilter, setAccountantFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('thisMonth');
   const [qrNameFilter, setQrNameFilter] = useState('');
   const [qrList, setQrList] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, bookingId: null, shortCode: '' });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, bookingId: null, shortCode: '' });
@@ -168,61 +168,61 @@ const AdminBookingManager = () => {
 
       {/* Stats */}
       <div className="stats-grid">
-        <div className="stat-card total">
+        <div className="stat-card">
           <div className="stat-info">
             <span className="stat-label">Tổng đơn</span>
             <span className="stat-value">{stats.total}</span>
           </div>
         </div>
-        <div className="stat-card pending">
+        <div className="stat-card">
           <div className="stat-info">
             <span className="stat-label">Mới tạo</span>
             <span className="stat-value">{stats.pending_claim}</span>
           </div>
         </div>
-        <div className="stat-card processing">
+        <div className="stat-card">
           <div className="stat-info">
             <span className="stat-label">Đang xử lý</span>
             <span className="stat-value">{stats.processing}</span>
           </div>
         </div>
-        <div className="stat-card completed">
+        <div className="stat-card">
           <div className="stat-info">
             <span className="stat-label">Hoàn thành</span>
             <span className="stat-value">{stats.completed}</span>
           </div>
         </div>
-        <div className="stat-card rejected">
+        <div className="stat-card">
           <div className="stat-info">
             <span className="stat-label">Từ chối</span>
             <span className="stat-value">{stats.rejected}</span>
           </div>
         </div>
-        <div className="stat-card cancelled">
+        <div className="stat-card">
           <div className="stat-info">
             <span className="stat-label">Đã hủy</span>
             <span className="stat-value">{stats.cancelled ?? 0}</span>
           </div>
         </div>
-        <div className="stat-card amount">
+        <div className="stat-card">
           <div className="stat-info">
             <span className="stat-label">Tổng doanh thu</span>
             <span className="stat-value">{formatMoney(stats.total_revenue)}</span>
           </div>
         </div>
-        <div className="stat-card fee">
+        <div className="stat-card">
           <div className="stat-info">
             <span className="stat-label">Tổng phí khách chịu</span>
             <span className="stat-value">{formatMoney(stats.total_fee)}</span>
           </div>
         </div>
-        <div className="stat-card base-fee">
+        <div className="stat-card">
           <div className="stat-info">
             <span className="stat-label">Tổng phí gốc</span>
             <span className="stat-value">{formatMoney(stats.total_base_fee)}</span>
           </div>
         </div>
-        <div className="stat-card profit">
+        <div className="stat-card">
           <div className="stat-info">
             <span className="stat-label">Lợi nhuận</span>
             <span className="stat-value">{formatMoney(stats.total_profit)}</span>
@@ -233,8 +233,7 @@ const AdminBookingManager = () => {
       {/* Toolbar */}
       <div className="booking-toolbar">
         <div className="booking-title">
-          <h1>Quản lý đơn hàng toàn hệ thống</h1>
-          <p>Trang {currentPage} / {totalPages || 1}</p>
+          <h1>Quản lý đơn hàng </h1>
         </div>
         <div className="booking-controls">
           <div className="search-box">
@@ -387,7 +386,12 @@ const AdminBookingManager = () => {
                 <span className="amount">{formatMoney(b.transfer_amount)} đ</span>
               </div>
               <div className="card-middle">
-                <span className="code">{shortCode(b.code)}</span>
+                <div className="code-wrapper">
+                  <span className="code">{shortCode(b.code)}</span>
+                  <div className={`acc-status-text-mobile ${b.accountant_status === 'paid' ? 'paid' : 'unpaid'}`}>
+                    {b.accountant_status === 'paid' ? 'Kế toán đã thanh toán' : 'Kế toán chưa thanh toán'}
+                  </div>
+                </div>
                 <div className="validation-mobile">
                   <span className="label">Xác nhận: </span>
                   {b.is_valid === 'yes'
@@ -398,13 +402,15 @@ const AdminBookingManager = () => {
                 </div>
               </div>
               <div className="card-bottom">
-                <div className={`status-badge-mobile ${b.status === 'customer_paid' && !b.staff_id ? 'unclaimed' : b.status}`}>
-                  {b.status === 'customer_paid' && !b.staff_id ? 'Chưa nhận' : statusLabel(b.status)}
-                </div>
+                {!(b.status === 'customer_paid' && !b.staff_id) && (
+                  <div className={`status-badge-mobile ${b.status}`}>
+                    {statusLabel(b.status)}
+                  </div>
+                )}
                 <div className="card-actions">
                   {b.status === 'customer_paid' && !b.staff_id && (
                     <button className="claim-btn-mobile" onClick={() => setConfirmModal({ isOpen: true, bookingId: b.id, shortCode: shortCode(b.code) })}>
-                      Nhận
+                      Xử lý
                     </button>
                   )}
                   <button className="detail-btn-mobile" onClick={() => navigate(`/admin/bookings/${b.id}`)}>

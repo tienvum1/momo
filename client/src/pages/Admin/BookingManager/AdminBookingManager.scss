@@ -8,8 +8,9 @@
     min-height: 100vh;
     box-sizing: border-box;
 
-    @media (max-width: 640px) {
-        padding: 16px;
+    @media (max-width: 768px) {
+        padding: 0;
+        background: transparent;
     }
 }
 
@@ -17,8 +18,8 @@
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 8px; // Reduced from 10px
+    margin-bottom: 8px; // Reduced from 10px
 
     &--money {
         grid-template-columns: repeat(4, 1fr);
@@ -35,6 +36,9 @@
 
     @media (max-width: 768px) {
         grid-template-columns: repeat(2, 1fr);
+        padding: 0;
+        margin: 0 0 8px 0; // Reduced from 12px
+        gap: 6px; // Reduced from 8px
     }
 }
 
@@ -48,6 +52,11 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border: 1px solid #e2e8f0;
     transition: transform 0.2s, box-shadow 0.2s;
+
+    @media (max-width: 768px) {
+        flex: 1;
+        padding: 10px;
+    }
 
     &:hover {
         transform: translateY(-2px);
@@ -83,101 +92,11 @@
         .stat-value {
             font-size: 15px;
             font-weight: 800;
-            color: #0f172a;
+            color: #0f172a; // Uniform dark color
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-    }
-
-    &.total .stat-value {
-        color: #3b82f6 !important;
-    }
-
-    &.pending .stat-value {
-        color: #f59e0b !important;
-    }
-
-    &.processing .stat-value {
-        color: #db2777 !important;
-    }
-
-    &.completed .stat-value {
-        color: #10b981 !important;
-    }
-
-    &.rejected .stat-value {
-        color: #ef4444 !important;
-    }
-
-    &.cancelled .stat-value {
-        color: #94a3b8 !important;
-    }
-
-    &.amount .stat-value {
-        color: #ca8a04 !important;
-    }
-
-    &.fee .stat-value {
-        color: #a855f7 !important;
-    }
-
-    &.base-fee .stat-value {
-        color: #ea580c !important;
-    }
-
-    &.profit .stat-value {
-        color: #16a34a !important;
-    }
-
-    &.total .stat-icon {
-        background: #eff6ff;
-        color: #3b82f6;
-    }
-
-    &.pending .stat-icon {
-        background: #fff7ed;
-        color: #f59e0b;
-    }
-
-    &.processing .stat-icon {
-        background: #fdf2f8;
-        color: #db2777;
-    }
-
-    &.completed .stat-icon {
-        background: #f0fdf4;
-        color: #10b981;
-    }
-
-    &.rejected .stat-icon {
-        background: #fef2f2;
-        color: #ef4444;
-    }
-
-    &.cancelled .stat-icon {
-        background: #f8fafc;
-        color: #94a3b8;
-    }
-
-    &.amount .stat-icon {
-        background: #fefce8;
-        color: #ca8a04;
-    }
-
-    &.fee .stat-icon {
-        background: #fdf4ff;
-        color: #a855f7;
-    }
-
-    &.base-fee .stat-icon {
-        background: #fff7ed;
-        color: #ea580c;
-    }
-
-    &.profit .stat-icon {
-        background: #f0fdf4;
-        color: #16a34a;
     }
 }
 
@@ -207,28 +126,36 @@
 .booking-toolbar {
     flex-direction: column; // Chuyển sang cột để title nằm trên
     align-items: center; // Căn giữa toàn bộ toolbar
-    gap: 24px;
-    margin-bottom: 24px;
-    padding: 32px 20px;
+    gap: 16px; // Reduced gap from 24px
+    margin-bottom: 16px; // Reduced from 24px
+    padding: 16px 20px; // Reduced from 32px 20px
     background: #ffffff;
-    border-radius: 20px;
+    border-radius: 12px; // Smaller radius from 20px
     border: 1px solid #e2e8f0;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+
+    @media (max-width: 768px) {
+        width: 100%;
+        margin: 0 0 8px 0; // Reduced from 12px
+        padding: 16px; // Reduced from 24px 16px
+        border-radius: 12px; // Reduced from 16px
+        box-sizing: border-box;
+    }
 
     .booking-title {
         text-align: center; // Căn giữa nội dung text
 
         h1 {
             margin: 0;
-            font-size: 26px;
+            font-size: 20px; // Smaller font from 26px
             font-weight: 800;
             color: #0f172a;
             letter-spacing: -0.025em;
         }
 
         p {
-            margin: 8px 0 0;
-            font-size: 15px;
+            margin: 4px 0 0; // Reduced margin from 8px
+            font-size: 13px; // Smaller font from 15px
             color: #64748b;
         }
     }
@@ -305,24 +232,24 @@
 
     thead th {
         text-align: left;
-        font-size: 11px;
+        font-size: 10px; // Smaller font from 11px
         text-transform: uppercase;
         letter-spacing: 0.025em;
         color: #64748b;
         background: #f8fafc;
-        padding: 16px 20px;
+        padding: 10px 12px; // Reduced padding from 16px 20px
         border-bottom: 1px solid #e2e8f0;
         font-weight: 700;
         white-space: nowrap;
     }
 
     tbody td {
-        padding: 16px 20px;
+        padding: 8px 12px; // Reduced padding from 16px 20px
         border-bottom: 1px solid #f1f5f9;
         vertical-align: middle;
         color: #0f172a;
         font-weight: 500;
-        font-size: 14px;
+        font-size: 13px; // Smaller font from 14px
         text-align: left;
     }
 
@@ -544,14 +471,16 @@
 
     .booking-mobile-card {
         background: white;
-        padding: 16px;
+        padding: 10px 12px; // Reduced padding from 16px
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 6px; // Reduced gap from 12px
         border: 1px solid #e2e8f0;
-        margin: 8px;
-        border-radius: 12px;
+        margin: 0 0 4px 0; // Reduced bottom margin from 8px
+        width: 100%;
+        border-radius: 8px; // Smaller radius
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        box-sizing: border-box;
 
         .card-top {
             display: flex;
@@ -559,35 +488,55 @@
             align-items: center;
 
             .date {
-                font-size: 13px;
+                font-size: 11px; // Smaller font
                 color: #94a3b8;
                 font-weight: 500;
             }
 
             .amount {
-                font-size: 16px;
+                font-size: 14px; // Smaller font from 16px
                 font-weight: 800;
-                color: #1e3a8a; // Dark blue
+                color: #1e3a8a;
             }
         }
 
         .card-middle {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
 
-            .code {
-                font-size: 14px;
-                font-weight: 600;
-                color: #334155;
-                font-family: 'JetBrains Mono', monospace;
+            .code-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 1px;
+
+                .code {
+                    font-size: 13px; // Smaller font from 14px
+                    font-weight: 600;
+                    color: #334155;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+
+                .acc-status-text-mobile {
+                    font-size: 10px; // Smaller font from 11px
+                    font-weight: 700;
+
+                    &.paid {
+                        color: #16a34a;
+                    }
+
+                    &.unpaid {
+                        color: #dc2626;
+                    }
+                }
             }
 
             .validation-mobile {
-                font-size: 13px;
+                font-size: 11px; // Smaller font from 13px
                 display: flex;
                 align-items: center;
-                gap: 4px;
+                gap: 3px;
+                margin-top: 1px;
 
                 .label {
                     color: #94a3b8;
@@ -614,11 +563,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-top: 2px; // Add a tiny bit of space
 
             .status-badge-mobile {
-                padding: 4px 12px;
-                border-radius: 6px;
-                font-size: 12px;
+                padding: 2px 8px; // Smaller padding
+                border-radius: 4px;
+                font-size: 10px; // Smaller font from 12px
                 font-weight: 600;
                 background: #f1f5f9;
                 color: #64748b;
@@ -643,20 +593,23 @@
 
             .card-actions {
                 display: flex;
-                gap: 8px;
+                gap: 4px; // Reduced gap from 6px
+                margin-left: auto;
+                flex-wrap: wrap;
+                justify-content: flex-end;
 
                 .claim-btn-mobile {
-                    background: #22c55e; // Green
+                    background: #4f46e5;
                     color: white;
                     border: none;
-                    padding: 6px 20px;
-                    border-radius: 6px;
+                    padding: 4px 10px; // Smaller padding
+                    border-radius: 4px;
                     font-weight: 700;
-                    font-size: 14px;
+                    font-size: 11px; // Smaller font from 13px
                     cursor: pointer;
 
                     &:hover {
-                        background: #16a34a;
+                        background: #4338ca;
                     }
                 }
 
@@ -664,10 +617,10 @@
                     background: #f1f5f9;
                     color: #475569;
                     border: 1px solid #e2e8f0;
-                    padding: 6px 12px;
-                    border-radius: 6px;
+                    padding: 4px 8px; // Smaller padding
+                    border-radius: 4px;
                     font-weight: 600;
-                    font-size: 13px;
+                    font-size: 11px; // Smaller font from 13px
                     cursor: pointer;
                 }
 
@@ -675,12 +628,17 @@
                     background: #fef2f2;
                     color: #ef4444;
                     border: 1px solid #fee2e2;
-                    padding: 6px;
-                    border-radius: 6px;
+                    padding: 4px; // Smaller padding
+                    border-radius: 4px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
+
+                    svg {
+                        width: 14px; // Smaller icon
+                        height: 14px;
+                    }
 
                     &:hover {
                         background: #fee2e2;
@@ -695,18 +653,18 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
-    margin-top: 24px;
-    padding: 16px 0;
+    gap: 4px; // Reduced from 8px
+    margin-top: 12px; // Reduced from 24px
+    padding: 8px 0; // Reduced from 16px
 
     .page-btn {
-        min-width: 36px;
-        height: 36px;
+        min-width: 30px; // Smaller from 36px
+        height: 30px; // Smaller from 36px
         border: 1px solid #e2e8f0;
         background: #fff;
         color: #475569;
-        border-radius: 8px;
-        font-size: 14px;
+        border-radius: 6px; // Smaller from 8px
+        font-size: 12px; // Smaller from 14px
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;

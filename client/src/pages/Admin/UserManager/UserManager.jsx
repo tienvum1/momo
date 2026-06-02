@@ -342,9 +342,7 @@ const UserManager = () => {
                   <tr key={user.id}>
                     <td data-label="Vai trò & Quyền">
                       <div className="user-info-cell">
-                        <div className="avatar">
-                          <Shield size={16} />
-                        </div>
+                
                         <div className="details">
                           <div className="name">{getRoleLabel(user.role)}</div>
                           <div className="role-small">
