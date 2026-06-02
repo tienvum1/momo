@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../../api/axios';
 import './QRManager.scss';
 
 const StaffQRManager = () => {
+  const navigate = useNavigate();
   const [qrs, setQrs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -133,15 +135,6 @@ const StaffQRManager = () => {
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
 
-  const formatDateTime = (value) => {
-    if (!value) return '—';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return '—';
-    // Cộng thêm 7 tiếng (UTC+7)
-    d.setHours(d.getHours() + 7);
-    return d.toLocaleDateString('vi-VN');
-  };
-
   const handleToggleStatus = async (qr) => {
     const nextStatus = qr.status === 'ready' ? 'maintenance' : 'ready';
     setUpdatingId(qr.id);
@@ -173,33 +166,38 @@ const StaffQRManager = () => {
 
   return (
     <div className="staff-qr-page">
-      <div className="qr-toolbar">
-        <div className="qr-title">
-          <h1>Quản lý thẻ QR</h1>
-          <p>{filteredQrs.length} / {qrs.length} thẻ</p>
+      {/* ── Header ── */}
+      <div className="acc-qr-header">
+        <div className="back-btn-wrapper">
+          <button className="back-btn" onClick={() => navigate('/admin')}>
+            ← Quay lại
+          </button>
         </div>
-
-        <div className="qr-controls">
+        <div className="acc-qr-title">
+          <h1>Quản lý QR</h1>
+          <p>{qrs.length} thẻ — {qrs.filter(qr => qr.accountant_editable).length} được phép chỉnh sửa</p>
+        </div>
+        <div className="acc-qr-controls">
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="all">Tất cả</option>
+            <option value="all">Tất cả trạng thái</option>
             <option value="ready">Sẵn sàng</option>
             <option value="maintenance">Bảo trì</option>
           </select>
-
           <button
-            className="primary-btn"
+            className="add-qr-btn"
             onClick={() => {
               resetForm();
               setSubmitting(false);
               setShowModal(true);
             }}
           >
-            + Thêm thẻ
+            + Thêm thẻ mới
           </button>
         </div>
       </div>
 
-      <div className="table-shell">
+      <div className="table-shell desktop-only">
+        {/* ... (keep desktop table as is or similar) */}
         <table className="qr-table">
           <thead>
             <tr>
@@ -213,8 +211,6 @@ const StaffQRManager = () => {
               <th className="th-fee">Phí L1</th>
               <th className="th-fee">Phí L2</th>
               <th className="th-fee">Phí L3</th>
-              <th className="th-date">Ngày tạo</th>
-              <th className="th-date">Ngày cập nhật</th>
               <th className="th-status">Trạng thái QR</th>
               <th className="th-status">Kế toán sửa</th>
               <th className="th-actions">Thao tác</th>
@@ -223,7 +219,7 @@ const StaffQRManager = () => {
           <tbody>
             {filteredQrs.length === 0 ? (
               <tr>
-                <td colSpan={10} className="empty">
+                <td colSpan={13} className="empty">
                   Không có dữ liệu phù hợp.
                 </td>
               </tr>
@@ -232,32 +228,18 @@ const StaffQRManager = () => {
                 const statusText = qr.status === 'ready' ? 'Sẵn sàng' : 'Bảo trì';
                 return (
                   <tr key={qr.id}>
-                    <td data-label="ID" className="td-stt">
-                      #{qr.id}
-                    </td>
-                    <td data-label="Tên QR">
-                      <span style={{ fontWeight: 600 }}>{qr.name || '—'}</span>
-                    </td>
+                    <td data-label="ID" className="td-stt">#{qr.id}</td>
+                    <td data-label="Tên QR"><span style={{ fontWeight: 600 }}>{qr.name || '—'}</span></td>
                     <td data-label="Ảnh đại diện" className="td-img">
                       <div className="qr-cell">
-                        <button
-                          type="button"
-                          className="qr-thumb-btn"
-                          onClick={() => setPreviewImageUrl(qr.main_image)}
-                          title="Xem ảnh đại diện"
-                        >
+                        <button type="button" className="qr-thumb-btn" onClick={() => setPreviewImageUrl(qr.main_image)}>
                           <img className="qr-thumb" src={qr.main_image} alt={`Main ${qr.id}`} />
                         </button>
                       </div>
                     </td>
                     <td data-label="Ảnh QR" className="td-img">
                       <div className="qr-cell">
-                        <button
-                          type="button"
-                          className="qr-thumb-btn"
-                          onClick={() => setPreviewImageUrl(qr.qr_image)}
-                          title="Xem mã QR"
-                        >
+                        <button type="button" className="qr-thumb-btn" onClick={() => setPreviewImageUrl(qr.qr_image)}>
                           <img className="qr-thumb" src={qr.qr_image} alt={`QR ${qr.id}`} />
                         </button>
                       </div>
@@ -265,30 +247,17 @@ const StaffQRManager = () => {
                     <td data-label="Hạn mức" className="td-money">
                       <span className="money-value">{formatMoney(qr.max_amount_per_trans)}</span>
                     </td>
-                    <td data-label="Phí gốc" className="td-fee">
-                      <span className="fee-badge base">{qr.base_fee_rate || 0}%</span>
-                    </td>
-                    <td data-label="Phí Def" className="td-fee">
-                      <span className="fee-badge def">{qr.fee_rate}%</span>
-                    </td>
-                    <td data-label="Phí L1" className="td-fee">
-                      <span className="fee-badge l1">{qr.fee_rate_l1}%</span>
-                    </td>
-                    <td data-label="Phí L2" className="td-fee">
-                      <span className="fee-badge l2">{qr.fee_rate_l2}%</span>
-                    </td>
-                    <td data-label="Phí L3" className="td-fee">
-                      <span className="fee-badge l3">{qr.fee_rate_l3}%</span>
-                    </td>
-                    <td data-label="Ngày tạo" className="td-date">{formatDateTime(qr.created_at)}</td>
-                    <td data-label="Ngày cập nhật" className="td-date">{formatDateTime(qr.updated_at)}</td>
+                    <td data-label="Phí gốc" className="td-fee"><span className="fee-badge base">{qr.base_fee_rate || 0}%</span></td>
+                    <td data-label="Phí Def" className="td-fee"><span className="fee-badge def">{qr.fee_rate}%</span></td>
+                    <td data-label="Phí L1" className="td-fee"><span className="fee-badge l1">{qr.fee_rate_l1}%</span></td>
+                    <td data-label="Phí L2" className="td-fee"><span className="fee-badge l2">{qr.fee_rate_l2}%</span></td>
+                    <td data-label="Phí L3" className="td-fee"><span className="fee-badge l3">{qr.fee_rate_l3}%</span></td>
                     <td data-label="Trạng thái QR" className="td-status">
                       <button
                         type="button"
                         className={`status-toggle-btn ${qr.status !== 'ready' ? 'inactive' : ''}`}
                         onClick={() => handleToggleStatus(qr)}
                         disabled={updatingId === qr.id}
-                        title="Bấm để đổi trạng thái"
                       >
                         {statusText}
                       </button>
@@ -299,9 +268,8 @@ const StaffQRManager = () => {
                         className={`status-toggle-btn ${qr.accountant_editable ? 'active' : 'inactive'}`}
                         onClick={() => handleToggleAccountantEditable(qr)}
                         disabled={togglingEditId === qr.id}
-                        title="Bật/tắt quyền sửa cho kế toán"
                       >
-                        {togglingEditId === qr.id ? '...' : qr.accountant_editable ? '✓ Bật' : '✗ Tắt'}
+                        {qr.accountant_editable ? '✓ Bật' : '✗ Tắt'}
                       </button>
                     </td>
                     <td data-label="Thao tác" className="td-actions">
@@ -315,6 +283,77 @@ const StaffQRManager = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="qr-mobile-list mobile-only">
+        {filteredQrs.length === 0 ? (
+          <div className="empty">Không có dữ liệu phù hợp.</div>
+        ) : (
+          filteredQrs.map((qr) => (
+            <div key={qr.id} className="acc-qr-card">
+              <div className="card-images">
+                <div className="card-img-wrap" onClick={() => setPreviewImageUrl(qr.main_image)}>
+                  <img src={qr.main_image} alt={`Ảnh đại diện ${qr.name}`} />
+                  <span className="img-label">Ảnh đại diện</span>
+                </div>
+                <div className="card-img-wrap" onClick={() => setPreviewImageUrl(qr.qr_image)}>
+                  <img src={qr.qr_image} alt={`Mã QR ${qr.name}`} />
+                  <span className="img-label">Mã QR</span>
+                </div>
+              </div>
+
+              <div className="card-body">
+                <div className="card-name">#{qr.id} — {qr.name || '—'}</div>
+                
+                <div className="card-rows">
+                  <div className="card-row">
+                    <span className="row-label">Hạn mức</span>
+                    <span className="row-value money">{formatMoney(qr.max_amount_per_trans)} VNĐ</span>
+                  </div>
+                  <div className="card-row">
+                    <span className="row-label">Ghi chú</span>
+                    <span className="row-value note">{qr.note || '—'}</span>
+                  </div>
+                </div>
+
+                <div className="fee-grid">
+                  <div className="fee-item">
+                    <span className="fee-label">Phí mặc định</span>
+                    <span className="fee-val def">{qr.fee_rate}%</span>
+                  </div>
+                  <div className="fee-item">
+                    <span className="fee-label">Phí Cấp 1</span>
+                    <span className="fee-val l1">{qr.fee_rate_l1}%</span>
+                  </div>
+                  <div className="fee-item">
+                    <span className="fee-label">Phí Cấp 2</span>
+                    <span className="fee-val l2">{qr.fee_rate_l2}%</span>
+                  </div>
+                  <div className="fee-item">
+                    <span className="fee-label">Phí Cấp 3</span>
+                    <span className="fee-val l3">{qr.fee_rate_l3}%</span>
+                  </div>
+                </div>
+
+                <div className="card-status-wrapper">
+                  <div className={`status-pill ${qr.status}`} onClick={() => handleToggleStatus(qr)}>
+                    {qr.status === 'ready' ? '● Sẵn sàng' : '● Bảo trì'}
+                  </div>
+                  <div 
+                    className={`status-pill accountant-edit ${qr.accountant_editable ? 'active' : ''}`} 
+                    onClick={() => handleToggleAccountantEditable(qr)}
+                  >
+                    {qr.accountant_editable ? '● Kế toán: Được sửa' : '● Kế toán: Tắt sửa'}
+                  </div>
+                </div>
+
+                <button type="button" className="edit-btn-mobile" onClick={() => handleEdit(qr)}>
+                  ✏️ Chỉnh sửa
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {previewImageUrl && (
