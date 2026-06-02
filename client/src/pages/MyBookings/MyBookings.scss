@@ -10,6 +10,11 @@
   gap: 24px;
   box-sizing: border-box;
 
+  @media (max-width: 768px) {
+    padding: 12px;
+    gap: 16px;
+  }
+
   &.full-width {
     max-width: 100%;
 
@@ -70,6 +75,13 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     border: 1px solid #e2e8f0;
 
+    @media (max-width: 992px) {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 16px;
+      gap: 16px;
+    }
+
     .header-title {
       text-align: left;
 
@@ -78,12 +90,20 @@
         font-size: 24px;
         font-weight: 800;
         color: #0f172a;
+
+        @media (max-width: 768px) {
+          font-size: 20px;
+        }
       }
 
       p {
         margin: 4px 0 0;
         font-size: 14px;
         color: #64748b;
+
+        @media (max-width: 768px) {
+          font-size: 13px;
+        }
       }
     }
 
@@ -92,24 +112,44 @@
       align-items: center;
       gap: 16px;
 
-      .search input {
-        width: 250px;
-        padding: 10px 16px;
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
-        outline: none;
-        font-size: 14px;
-        transition: all 0.2s;
+      @media (max-width: 992px) {
+        flex-direction: column;
+        align-items: stretch;
+      }
 
-        &:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      .search {
+        @media (max-width: 992px) {
+          width: 100%;
+        }
+
+        input {
+          width: 250px;
+          padding: 10px 16px;
+          border-radius: 10px;
+          border: 1px solid #e2e8f0;
+          outline: none;
+          font-size: 14px;
+          transition: all 0.2s;
+
+          @media (max-width: 992px) {
+            width: 100%;
+          }
+
+          &:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+          }
         }
       }
 
       .filters-group {
         display: flex;
         gap: 12px;
+
+        @media (max-width: 768px) {
+          flex-direction: column;
+          gap: 8px;
+        }
 
         select {
           min-width: 160px;
@@ -122,6 +162,11 @@
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
+
+          @media (max-width: 768px) {
+            min-width: 0;
+            width: 100%;
+          }
 
           &:focus {
             border-color: #6366f1;
@@ -137,6 +182,19 @@
     grid-template-columns: repeat(7, 1fr);
     gap: 10px;
 
+    @media (max-width: 1400px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    @media (max-width: 992px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 480px) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px; // Reduced from 8px
+    }
+
     .stat-card {
       background: #ffffff;
       padding: 12px;
@@ -148,20 +206,17 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       transition: transform 0.2s, box-shadow 0.2s;
 
+      @media (max-width: 768px) {
+        padding: 6px 8px; // Reduced from 10px
+
+        &.total {
+          grid-column: span 2;
+        }
+      }
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 12px -3px rgba(0, 0, 0, 0.08);
-      }
-
-      .stat-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        flex-shrink: 0;
       }
 
       .stat-info {
@@ -179,6 +234,10 @@
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+
+          @media (max-width: 768px) {
+            font-size: 9px;
+          }
         }
 
         .value {
@@ -188,40 +247,27 @@
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+
+          @media (max-width: 768px) {
+            font-size: 14px;
+          }
         }
       }
+    }
+  }
 
-      &.total .stat-icon {
-        background: #eef2ff;
-      }
+  // Visibility helpers
+  .desktop-only {
+    @media (max-width: 768px) {
+      display: none !important;
+    }
+  }
 
-      &.created .stat-icon {
-        background: #fffbeb;
-      }
+  .mobile-only {
+    display: none !important;
 
-      &.processing .stat-icon {
-        background: #eff6ff;
-      }
-
-      &.completed .stat-icon {
-        background: #ecfdf5;
-      }
-
-      &.rejected .stat-icon {
-        background: #fef2f2;
-      }
-
-      &.cancelled .stat-icon {
-        background: #f8fafc;
-      }
-
-      &.amount .stat-icon {
-        background: #f0fdf4;
-      }
-
-      &.fee .stat-icon {
-        background: #fdf4ff;
-      }
+    @media (max-width: 768px) {
+      display: block !important;
     }
   }
 
@@ -398,11 +444,6 @@
         gap: 6px;
         box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 
-        &::before {
-          content: '💳';
-          font-size: 13px;
-        }
-
         &:hover {
           background: #d97706;
           transform: translateY(-1px);
@@ -424,189 +465,153 @@
     }
   }
 
-  // Mobile Card View
-  @media (max-width: 768px) {
-    .table-container {
-      background: transparent;
-      border: none;
-      box-shadow: none;
-      overflow: visible;
-
-      .booking-table {
-        display: block;
-        min-width: 0;
-
-        thead {
-          display: none;
-        }
-
-        tbody {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-
-          tr {
-            display: flex;
-            flex-direction: column;
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 20px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            gap: 0;
-
-
-            td {
-              display: flex;
-              flex-direction: row; // Đổi về hàng để label và value nằm cạnh nhau
-              justify-content: flex-start;
-              align-items: flex-start;
-              padding: 12px 0;
-              border: none;
-              border-bottom: 1px dashed #f1f5f9;
-              text-align: left;
-              gap: 12px;
-
-              &::before {
-                content: attr(data-label);
-                width: 120px; // Cột label bên trái cố định độ rộng
-                flex-shrink: 0;
-                font-size: 11px;
-                font-weight: 700;
-                color: #94a3b8;
-                text-transform: uppercase;
-                padding-top: 2px;
-                text-align: left;
-              }
-
-              // Xử lý content trực tiếp (vì một số td không có div con)
-              font-weight: 600;
-              color: #1e293b;
-              word-break: break-word;
-
-              &>div {
-                flex: 1;
-                width: auto;
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start; // Căn trái giá trị
-                font-weight: 600;
-                color: #1e293b;
-              }
-
-              &:last-child {
-                display: block;
-                margin-top: 12px;
-                padding-top: 16px;
-                border-top: 1px solid #f1f5f9;
-                border-bottom: none;
-
-                &::before {
-                  display: none;
-                }
-
-                .detail-btn {
-                  width: 100%;
-                  justify-content: center;
-                  padding: 12px;
-                }
-
-                .pay-btn {
-                  width: 100%;
-                  justify-content: center;
-                  padding: 12px;
-                  margin-bottom: 8px;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // Pagination
-  .pagination {
+  // Mobile Card List
+  .booking-mobile-list {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    padding: 16px 0;
+    flex-direction: column;
+    gap: 6px; // Reduced from 12px
+    margin-bottom: 24px;
 
-    .page-btn {
-      min-width: 40px;
-      height: 40px;
+    .empty {
+      padding: 40px;
+      text-align: center;
+      background: white;
+      border-radius: 12px;
+      color: #64748b;
       border: 1px solid #e2e8f0;
-      background: #ffffff;
-      color: #0f172a;
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-
-      &:hover:not(:disabled) {
-        border-color: #6366f1;
-        color: #6366f1;
-      }
-
-      &.active {
-        background: #6366f1;
-        color: #ffffff;
-        border-color: #6366f1;
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
     }
-  }
 
-  // Responsive for Stats & Header
-  @media (max-width: 1200px) {
-    .stats-grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  @media (max-width: 992px) {
-    .my-bookings-header {
+    .booking-mobile-card {
+      background: white;
+      padding: 8px 12px; // Reduced from 16px
+      display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      padding: 20px;
+      gap: 6px; // Reduced from 12px
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
-      .header-controls {
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
+      .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
 
-        .search input {
-          width: 100%;
+        .date {
+          font-size: 11px; // Smaller
+          color: #94a3b8;
+          font-weight: 500;
         }
 
-        .filters-group {
-          flex-direction: column;
+        .amount {
+          font-size: 14px; // Smaller
+          font-weight: 800;
+          color: #0f172a;
+        }
+      }
 
-          select {
-            width: 100%;
+      .card-middle {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0; // Removed padding
+
+        .code {
+          font-family: monospace;
+          font-weight: 700;
+          font-size: 14px;
+          color: #4f46e5;
+          background: #eef2ff;
+          padding: 2px 8px;
+          border-radius: 4px;
+        }
+
+        .validation-mobile {
+          font-size: 13px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+
+          .label {
+            color: #64748b;
+          }
+
+          .valid-yes {
+            color: #15803d;
+            font-weight: 700;
+          }
+
+          .valid-no {
+            color: #dc2626;
+            font-weight: 700;
+          }
+
+          .valid-none {
+            color: #cbd5e1;
+          }
+        }
+      }
+
+      .card-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .card-actions {
+          display: flex;
+          gap: 8px;
+
+          button {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+          }
+
+          .pay-btn-mobile {
+            background: #f59e0b;
+            color: white;
+          }
+
+          .detail-btn-mobile {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
           }
         }
       }
     }
   }
 
-  @media (max-width: 768px) {
-    padding: 16px;
-    gap: 16px;
+  .status-badge-wrapper {
+    .status-text {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
 
-    .stats-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
+      &.created {
+        background: #f1f5f9;
+        color: #475569;
+      }
 
-  @media (max-width: 480px) {
-    .stats-grid {
-      grid-template-columns: 1fr;
+      &.paid {
+        background: #fffbeb;
+        color: #b45309;
+      }
+
+      &.completed {
+        background: #f0fdf4;
+        color: #16a34a;
+      }
+
+      &.rejected,
+      &.cancelled {
+        background: #fef2f2;
+        color: #dc2626;
+      }
     }
   }
 }

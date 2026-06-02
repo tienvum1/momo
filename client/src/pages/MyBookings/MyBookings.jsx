@@ -15,7 +15,7 @@ const MyBookings = () => {
   const [dateFilter, setDateFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   const dateOptions = [
     { label: 'Tất cả thời gian', value: 'all' },
@@ -209,49 +209,42 @@ const MyBookings = () => {
       {stats && (
         <div className="stats-grid">
           <div className="stat-card total">
-            <div className="stat-icon">📊</div>
             <div className="stat-info">
               <span className="label">Tổng số đơn</span>
               <span className="value">{stats.total}</span>
             </div>
           </div>
           <div className="stat-card created" onClick={() => { setStatusFilter('customer_paid'); setCurrentPage(1); }} style={{ cursor: 'pointer' }}>
-            <div className="stat-icon">🔄</div>
             <div className="stat-info">
               <span className="label">Đang xử lý</span>
               <span className="value">{stats.customer_paid_count ?? 0}</span>
             </div>
           </div>
           <div className="stat-card completed" onClick={() => { setStatusFilter('staff_confirmed'); setCurrentPage(1); }} style={{ cursor: 'pointer' }}>
-            <div className="stat-icon">✅</div>
             <div className="stat-info">
               <span className="label">Đã thanh toán</span>
               <span className="value">{stats.completed_count ?? 0}</span>
             </div>
           </div>
           <div className="stat-card rejected" onClick={() => { setStatusFilter('rejected'); setCurrentPage(1); }} style={{ cursor: 'pointer' }}>
-            <div className="stat-icon">❌</div>
             <div className="stat-info">
               <span className="label">Từ chối</span>
               <span className="value">{stats.rejected_count ?? 0}</span>
             </div>
           </div>
           <div className="stat-card cancelled" onClick={() => { setStatusFilter('cancelled'); setCurrentPage(1); }} style={{ cursor: 'pointer' }}>
-            <div className="stat-icon">🚫</div>
             <div className="stat-info">
               <span className="label">Đã hủy</span>
               <span className="value">{stats.cancelled_count ?? 0}</span>
             </div>
           </div>
           <div className="stat-card amount">
-            <div className="stat-icon">💰</div>
             <div className="stat-info">
               <span className="label">Tổng tiền giao dịch</span>
               <span className="value">{formatMoney(stats.total_amount)}</span>
             </div>
           </div>
           <div className="stat-card fee">
-            <div className="stat-icon">📉</div>
             <div className="stat-info">
               <span className="label">Tổng phí dịch vụ</span>
               <span className="value">{formatMoney(stats.total_fee)}</span>
@@ -260,7 +253,7 @@ const MyBookings = () => {
         </div>
       )}
 
-      <div className="table-container">
+      <div className="table-container desktop-only">
         <table className="booking-table">
           <thead>
             <tr>
@@ -325,6 +318,53 @@ const MyBookings = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="booking-mobile-list mobile-only">
+        {loading ? (
+          <div className="loading-skeleton">
+            {[...Array(5)].map((_, i) => <div key={i} className="skeleton-item" />)}
+          </div>
+        ) : bookings.length === 0 ? (
+          <div className="empty">Không có dữ liệu đơn hàng.</div>
+        ) : (
+          bookings.map((b) => (
+            <div key={b.id} className="booking-mobile-card">
+              <div className="card-top">
+                <span className="date">{formatDateTime(b.created_at)}</span>
+                <span className="amount">{formatMoney(b.transfer_amount)}</span>
+              </div>
+              <div className="card-middle">
+                <div className="code-wrapper">
+                  <span className="code">{shortCode(b.code)}</span>
+                </div>
+                <div className="validation-mobile">
+                  <span className="label">Xác nhận: </span>
+                  {b.is_valid === 'yes'
+                    ? <span className="valid-yes">✓ Có</span>
+                    : b.is_valid === 'no'
+                      ? <span className="valid-no">✗ Không</span>
+                      : <span className="valid-none">—</span>}
+                </div>
+              </div>
+              <div className="card-bottom">
+                <div className="status-badge-wrapper">
+                  {statusLabel(b.status)}
+                </div>
+                <div className="card-actions">
+                  {b.status === 'created' && (
+                    <button className="pay-btn-mobile" onClick={() => navigate(`/payment/${b.id}`)}>
+                      Thanh toán
+                    </button>
+                  )}
+                  <button className="detail-btn-mobile" onClick={() => navigate(`/my-bookings/${b.id}`)}>
+                    Chi tiết
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {renderPagination()}

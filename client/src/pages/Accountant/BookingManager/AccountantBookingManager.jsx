@@ -1,10 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../api/axios';
-import { 
-  Search, Eye, CheckCircle, Clock, XCircle,
-  AlertCircle, ChevronLeft, ChevronRight
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import './AccountantBookingManager.scss';
 
@@ -28,7 +25,7 @@ const AccountantBookingManager = () => {
   // Phân trang
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(20);
   
   const fetchBookings = useCallback(async () => {
     try {
@@ -100,13 +97,13 @@ const AccountantBookingManager = () => {
   const getStatusBadge = (booking) => {
     switch (booking.accountant_status) {
       case 'pending':
-        return <span className="badge-warning"><Clock size={12} /> Chờ chuyển tiền</span>;
+        return <span className="badge-warning">Chờ chuyển tiền</span>;
       case 'paid':
-        return <span className="badge-success"><CheckCircle size={12} /> Đã chuyển tiền</span>;
+        return <span className="badge-success">Đã chuyển tiền</span>;
       case 'rejected':
-        return <span className="badge-danger"><XCircle size={12} /> Từ chối chuyển tiền</span>;
+        return <span className="badge-danger">Từ chối chuyển tiền</span>;
       default:
-        return <span className="badge-default"><Clock size={12} /> Chờ xác nhận</span>;
+        return <span className="badge-default">Chờ xác nhận</span>;
     }
   };
 
@@ -120,7 +117,6 @@ const AccountantBookingManager = () => {
         
         <div className="header-actions">
           <div className="search-box">
-            <Search size={18} />
             <input 
               type="text" 
               placeholder="Tìm theo mã đơn, tên admin..." 
@@ -155,21 +151,18 @@ const AccountantBookingManager = () => {
       {/* Stats Cards */}
       <div className="stats-grid">
         <div className="stat-card total">
-          <div className="stat-icon">📊</div>
           <div className="stat-info">
             <span className="label">Tổng đơn</span>
             <span className="value">{stats.total}</span>
           </div>
         </div>
         <div className="stat-card pending">
-          <div className="stat-icon">⏳</div>
           <div className="stat-info">
             <span className="label">Chờ thanh toán</span>
             <span className="value">{stats.pending_count}</span>
           </div>
         </div>
         <div className="stat-card completed">
-          <div className="stat-icon">✅</div>
           <div className="stat-info">
             <span className="label">Đã thanh toán</span>
             <span className="value">{stats.completed_count}</span>
@@ -214,7 +207,7 @@ const AccountantBookingManager = () => {
                     <th>Thời gian</th>
                     <th>Trạng thái</th>
                     <th>Xác nhận</th>
-                    <th className="actions-col">Hành động</th>
+                    <th className="actions-col">Chi tiết & Xác nhận</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -222,7 +215,6 @@ const AccountantBookingManager = () => {
                     <tr>
                       <td colSpan="7" className="empty-row">
                         <div className="empty-state">
-                          <AlertCircle size={32} />
                           <p>Không có đơn hàng nào cần xử lý</p>
                         </div>
                       </td>
@@ -251,7 +243,7 @@ const AccountantBookingManager = () => {
                         </td>
                         <td className="actions-col">
                           <button className="detail-btn" onClick={() => navigate(`/accountant/bookings/${b.id}`)}>
-                            <Eye size={16} /> Chi tiết
+                            Chi tiết
                           </button>
                         </td>
                       </tr>
@@ -262,48 +254,39 @@ const AccountantBookingManager = () => {
             </div>
 
             {/* Mobile Card View */}
-            <div className="mobile-cards-view mobile-only">
+            <div className="booking-mobile-list mobile-only">
               {bookings.length === 0 ? (
-                <div className="empty-state">
-                  <AlertCircle size={32} />
-                  <p>Không có đơn hàng nào cần xử lý</p>
-                </div>
+                <div className="empty">Không có dữ liệu đơn hàng.</div>
               ) : (
                 bookings.map(b => (
                   <div key={b.id} className="booking-mobile-card">
                     <div className="card-top">
-                      <span className="code">#{b.code.slice(-8).toUpperCase()}</span>
-                      {getStatusBadge(b)}
+                      <span className="date">{new Date(b.created_at).toLocaleString('vi-VN')}</span>
+                      <span className="amount">{formatMoney(b.transfer_amount)}</span>
                     </div>
-                    <div className="card-row">
-                      <span className="label">Số tiền:</span>
-                      <span className="value amount">{formatMoney(b.transfer_amount)}</span>
-                    </div>
-                    <div className="card-row">
-                      <span className="label">Xác nhận:</span>
-                      <span className="value">
+                    <div className="card-middle">
+                      <div className="code-wrapper">
+                        <span className="code">#{b.code.slice(-8).toUpperCase()}</span>
+                      </div>
+                      <div className="validation-mobile">
+                        <span className="label">Xác nhận: </span>
                         {b.is_valid === 'yes'
-                          ? <span style={{ color: '#15803d', fontWeight: 700 }}>✓ Có</span>
+                          ? <span className="valid-yes">✓ Có</span>
                           : b.is_valid === 'no'
-                            ? <span style={{ color: '#dc2626', fontWeight: 700 }}>✗ Không</span>
-                            : <span style={{ color: '#cbd5e1' }}>—</span>}
-                      </span>
-                    </div>
-                    <div className="card-row admin-box">
-                      <div className="label">Nguồn tiền Admin:</div>
-                      <div className="admin-detail">
-                        <div className="holder">{b.admin_account_holder}</div>
-                        <div className="bank">{b.admin_bank_name} - {b.admin_account_number}</div>
+                            ? <span className="valid-no">✗ Không</span>
+                            : <span className="valid-none">—</span>}
                       </div>
                     </div>
-                    <div className="card-row">
-                      <span className="label">Thời gian:</span>
-                      <span className="value">{new Date(b.created_at).toLocaleString('vi-VN')}</span>
+                    <div className="card-bottom">
+                      <div className="status-badge-wrapper">
+                        {getStatusBadge(b)}
+                      </div>
+                      <div className="card-actions">
+                        <button className="detail-btn-mobile" onClick={() => navigate(`/accountant/bookings/${b.id}`)}>
+                          Chi tiết
+                        </button>
+                      </div>
                     </div>
-
-                    <button className="mobile-detail-btn" onClick={() => navigate(`/accountant/bookings/${b.id}`)}>
-                      <Eye size={18} /> Xem chi tiết đơn hàng
-                    </button>
                   </div>
                 ))
               )}

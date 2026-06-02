@@ -26,8 +26,8 @@
 
   @media (max-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: 4px; // Reduced from 8px
+    margin-bottom: 12px; // Reduced from 16px
   }
 
   .stat-card {
@@ -44,6 +44,10 @@
     @media (max-width: 768px) {
       padding: 8px;
       gap: 6px;
+
+      &.total {
+        grid-column: span 2;
+      }
     }
 
     &:hover {
@@ -264,7 +268,7 @@
 .booking-mobile-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px; // Reduced from 12px
   margin-bottom: 24px;
 
   .empty {
@@ -278,10 +282,10 @@
 
   .booking-mobile-card {
     background: white;
-    padding: 16px;
+    padding: 8px 12px; // Reduced from 16px
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px; // Reduced from 12px
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -292,13 +296,13 @@
       align-items: center;
 
       .date {
-        font-size: 12px;
+        font-size: 11px; // Smaller
         color: #94a3b8;
         font-weight: 500;
       }
 
       .amount {
-        font-size: 15px;
+        font-size: 14px; // Smaller
         font-weight: 800;
         color: #0f172a;
       }
@@ -308,7 +312,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 0;
+      padding: 0; // Removed padding
       // Removed borders between rows as requested
 
       .code {
