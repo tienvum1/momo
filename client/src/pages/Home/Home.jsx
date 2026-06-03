@@ -47,7 +47,7 @@ const Home = () => {
       </section>
 
       <section className="qr-showcase" id="ready-qrs">
-        <h2>Các thẻ QR đang sẵn sàng</h2>
+        <h2> QR đang sẵn sàng</h2>
         {!user ? (
           <div className="login-to-view">
             <div className="lock-icon">🔒</div>

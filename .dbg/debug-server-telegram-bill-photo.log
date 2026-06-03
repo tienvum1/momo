@@ -1,0 +1,19 @@
+[Debug Server] Trying http://127.0.0.1:7777...
+[Debug Server] Listening on http://127.0.0.1:7777
+@@DEBUG_SERVER_INFO
+{
+  "base_url": "http://127.0.0.1:7777",
+  "api_url": "http://127.0.0.1:7777/event",
+  "session_id": "telegram-bill-photo",
+  "log_dir": "/Users/phamvu/Learning/TheTinDung/.dbg",
+  "log_file": "/Users/phamvu/Learning/TheTinDung/.dbg/trae-debug-log-telegram-bill-photo.ndjson",
+  "env_file": "/Users/phamvu/Learning/TheTinDung/.dbg/telegram-bill-photo.env",
+  "endpoints": {
+    "POST /event": "Submit log event",
+    "GET /health": "Server health check",
+    "GET /logs": "Get all logs (supports ?last=N&hypothesisId=X&runId=Y)",
+    "DELETE /logs": "Clear all logs for this session"
+  }
+}
+@@END_DEBUG_SERVER_INFO
+[Debug Server] Idle for 1200s, exiting...
