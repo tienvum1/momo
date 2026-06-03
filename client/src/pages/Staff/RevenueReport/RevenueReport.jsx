@@ -19,6 +19,29 @@ const RevenueReport = () => {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith('/admin');
   const [reportType, setReportType] = useState('day');
+  
+  // Lấy tháng/năm hiện tại
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedDay, setSelectedDay] = useState('all');
+  const [showDayPicker, setShowDayPicker] = useState(false);
+
+  // Lưu trữ tháng đã chọn trước khi bấm "Tất cả"
+  const [lastSelectedMonth, setLastSelectedMonth] = useState(now.getMonth() + 1);
+
+  // Thêm state cho tháng/năm hiển thị trong lịch
+  const [calendarMonth, setCalendarMonth] = useState(now.getMonth() + 1);
+  const [calendarYear, setCalendarYear] = useState(now.getFullYear());
+
+  const openDayPicker = () => {
+    if (selectedMonth !== 'all') {
+      setCalendarMonth(selectedMonth);
+    }
+    setCalendarYear(selectedYear);
+    setShowDayPicker(true);
+  };
+
   const [data, setData] = useState({
     global:   { summary: {}, total: [], byQr: [], byStaff: [], byCustomer: [] },
     personal: { summary: {}, total: [], byQr: [] }
@@ -43,7 +66,7 @@ const RevenueReport = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await api.get(`/revenue?type=${reportType}`);
+        const res = await api.get(`/revenue?type=${reportType}&month=${selectedMonth}&year=${selectedYear}&day=${selectedDay}`);
         if (active) setData(res.data);
       } catch (err) {
         console.error('Lỗi khi tải báo cáo:', err);
@@ -53,7 +76,7 @@ const RevenueReport = () => {
     };
     load();
     return () => { active = false; };
-  }, [reportType]);
+  }, [reportType, selectedMonth, selectedYear, selectedDay]);
 
   const fmt = (amount) => {
     const n = Math.round(Number(amount) || 0);
@@ -70,7 +93,7 @@ const RevenueReport = () => {
     if (reportType === 'year') return dateStr;
     if (reportType === 'month') {
       const [year, month] = dateStr.split('-');
-      return `T${month}/${year}`;
+      return `Tháng ${month}/${year}`;
     }
     const [year, month, day] = dateStr.split('-');
     return `${day}/${month}/${year}`;
@@ -84,9 +107,51 @@ const RevenueReport = () => {
   const totalBaseFee   = Number(summary.total_base_fee || 0);
   const totalProfit    = Number(summary.total_profit   || 0);
   const totalOrders    = Number(summary.completed_count|| 0);
-  const periodLabel     = reportType === 'day' ? 'Hôm nay' : reportType === 'month' ? 'Tháng này' : 'Năm nay';
-  const fullPeriodLabel = reportType === 'day' ? 'Tháng này' : reportType === 'month' ? 'Năm này' : 'Toàn thời gian';
+  
+  const dayName = selectedDay === 'all' ? 'Tất cả các ngày' : `Ngày ${selectedDay}`;
+  const monthName = selectedMonth === 'all' ? 'Tất cả các tháng' : `Tháng ${selectedMonth}`;
+  const yearName = `Năm ${selectedYear}`;
+
+  const periodLabel     = reportType === 'day' ? (selectedDay === 'all' ? monthName : `${dayName} ${monthName}`) : reportType === 'month' ? yearName : 'Tất cả';
+  const fullPeriodLabel = reportType === 'day' ? (selectedDay === 'all' ? monthName : `${dayName} ${monthName}`) : reportType === 'month' ? yearName : 'Toàn thời gian';
   const groupLabel      = reportType === 'day' ? 'ngày' : reportType === 'month' ? 'tháng' : 'năm';
+
+  // Tính số ngày trong tháng và ngày bắt đầu của tháng
+  const getCalendarDays = () => {
+    const displayMonth = calendarMonth;
+    const displayYear = calendarYear;
+    
+    const firstDayOfMonth = new Date(displayYear, displayMonth - 1, 1);
+    const lastDayOfMonth = new Date(displayYear, displayMonth, 0);
+    
+    // Ngày bắt đầu của tuần (0: CN, 1: T2, ..., 6: T7)
+    // Chuyển sang (0: T2, ..., 5: T7, 6: CN)
+    let startDay = firstDayOfMonth.getDay() - 1;
+    if (startDay === -1) startDay = 6; 
+
+    const days = [];
+    
+    // Lấy ngày của tháng trước để lấp đầy hàng đầu tiên
+    const prevMonthLastDay = new Date(selectedYear, selectedMonth - 1, 0).getDate();
+    for (let i = startDay - 1; i >= 0; i--) {
+      days.push({ day: prevMonthLastDay - i, currentMonth: false });
+    }
+    
+    // Ngày của tháng hiện tại
+    for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
+      days.push({ day: i, currentMonth: true });
+    }
+    
+    // Lấp đầy cho đủ các hàng (6 hàng x 7 ngày = 42 ô)
+    const remaining = 42 - days.length;
+    for (let i = 1; i <= remaining; i++) {
+      days.push({ day: i, currentMonth: false });
+    }
+    
+    return days;
+  };
+
+  const calendarDays = getCalendarDays();
 
   // Tổng cộng cho bảng thời gian
   const totalRow = sectionData.total.reduce((acc, r) => ({
@@ -184,16 +249,153 @@ const RevenueReport = () => {
         {/* Period filter */}
         {!loading && (
           <div className="header-actions">
-            <div className="period-filter">
+            <div className="period-filter main-type-filter">
               {['day','month','year'].map(t => (
-                <button key={t} className={reportType === t ? 'active' : ''} onClick={() => setReportType(t)}>
+                <button 
+                  key={t} 
+                  className={reportType === t ? 'active' : ''} 
+                  onClick={() => {
+                    setReportType(t);
+                    setSelectedDay('all'); // Reset về tất cả ngày khi đổi chế độ xem
+                    if (t === 'month' && selectedMonth === 'all') {
+                      setSelectedMonth(lastSelectedMonth);
+                    }
+                  }}
+                >
                   {t === 'day' ? 'Ngày' : t === 'month' ? 'Tháng' : 'Năm'}
                 </button>
               ))}
             </div>
+
+            <div className="custom-period-pickers">
+              {reportType === 'day' && selectedMonth !== 'all' && (
+                <button 
+                  className="day-picker-trigger"
+                  onClick={openDayPicker}
+                >
+                  {selectedDay === 'all' ? 'Tất cả ngày' : `Ngày ${selectedDay}`}
+                </button>
+              )}
+              <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="year-picker"
+              >
+                {Array.from({ length: 5 }, (_, i) => {
+                  const y = now.getFullYear() - 2 + i;
+                  return <option key={y} value={y}>Năm {y}</option>;
+                })}
+              </select>
+
+              {reportType !== 'year' && (
+                <select 
+                  value={selectedMonth} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val !== 'all') setLastSelectedMonth(Number(val));
+                    setSelectedMonth(val === 'all' ? 'all' : Number(val));
+                    setSelectedDay('all'); // Reset về tất cả ngày khi đổi tháng
+                  }}
+                  className="month-picker"
+                >
+                  <option value="all">Tất cả tháng</option>
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
+                  ))}
+                </select>
+              )}
+            </div>
           </div>
         )}
       </div>
+
+      {/* Day Picker Grid Popup */}
+      {!loading && showDayPicker && (
+        <div className="day-picker-modal-overlay" onClick={() => setShowDayPicker(false)}>
+          <div className="day-picker-modal-content" onClick={e => e.stopPropagation()}>
+            <div className="calendar-container">
+              <div className="calendar-header">
+                <div className="month-year-display">
+                  tháng {calendarMonth} năm {calendarYear} <span className="arrow-down">▼</span>
+                </div>
+                <div className="header-nav">
+                  <button 
+                    className="nav-btn"
+                    onClick={() => {
+                      if (calendarMonth === 1) {
+                        setCalendarMonth(12);
+                        setCalendarYear(v => v - 1);
+                      } else {
+                        setCalendarMonth(v => v - 1);
+                      }
+                    }}
+                  >
+                    ↑
+                  </button>
+                  <button 
+                    className="nav-btn"
+                    onClick={() => {
+                      if (calendarMonth === 12) {
+                        setCalendarMonth(1);
+                        setCalendarYear(v => v + 1);
+                      } else {
+                        setCalendarMonth(v => v + 1);
+                      }
+                    }}
+                  >
+                    ↓
+                  </button>
+                </div>
+              </div>
+
+              <div className="calendar-weekdays">
+                <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+              </div>
+
+              <div className="calendar-grid">
+                {calendarDays.map((d, i) => (
+                  <button 
+                    key={i} 
+                    className={`calendar-day ${!d.currentMonth ? 'other-month' : ''} ${d.currentMonth && selectedDay === d.day && calendarMonth === selectedMonth && calendarYear === selectedYear ? 'active' : ''}`}
+                    onClick={() => {
+                      if (d.currentMonth) {
+                        setSelectedDay(d.day);
+                        setSelectedMonth(calendarMonth);
+                        setSelectedYear(calendarYear);
+                        setShowDayPicker(false);
+                      }
+                    }}
+                  >
+                    {d.day}
+                  </button>
+                ))}
+              </div>
+
+              <div className="calendar-footer">
+                <button 
+                  className="footer-btn clear-btn"
+                  onClick={() => {
+                    setSelectedDay('all');
+                    setShowDayPicker(false);
+                  }}
+                >
+                  Xóa
+                </button>
+                <button 
+                  className="footer-btn today-btn"
+                  onClick={() => {
+                    const today = new Date().getDate();
+                    setSelectedDay(today);
+                    setShowDayPicker(false);
+                  }}
+                >
+                  Hôm nay
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="loading-container">
@@ -266,21 +468,26 @@ const RevenueReport = () => {
                 </thead>
                 <tbody>
                   {sectionData.total.length === 0 ? (
-                    <tr><td colSpan={8} className="empty-state">Chưa có dữ liệu trong kỳ này</td></tr>
-                  ) : sectionData.total.map((item, idx) => (
-                    <tr key={idx}>
-                      <td data-label="Thời gian"><strong>{fmtDate(item.label)}</strong></td>
-                      <td data-label="Tổng đơn" className="text-center">{Number(item.total_count).toLocaleString()}</td>
-                      <td data-label="Hoàn thành" className="text-center text-success">{Number(item.completed_count).toLocaleString()}</td>
-                      <td data-label="Đang xử lý" className="text-center text-warning">{Number(item.processing_count).toLocaleString()}</td>
-                      <td data-label="Từ chối" className="text-center text-danger">{Number(item.rejected_count).toLocaleString()}</td>
-                      <td data-label="Đã hủy" className="text-center text-muted">{Number(item.cancelled_count).toLocaleString()}</td>
-                      <td data-label="Doanh thu" className="text-right text-revenue font-bold">{fmt(item.total_amount)}</td>
-                      <td data-label="Phí khách" className="text-right text-fee">{fmt(item.total_fee)}</td>
-                      {isAdminPath && <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}>{fmt(item.total_base_fee)}</td>}
-                      {isAdminPath && <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a', fontWeight:700}}>{fmt(item.total_profit)}</td>}
-                    </tr>
-                  ))}
+                    <tr><td colSpan={isAdminPath ? 10 : 8} className="empty-state">Chưa có dữ liệu trong kỳ này</td></tr>
+                  ) : sectionData.total.map((item, idx) => {
+                    const showDate = idx === 0 || item.label !== sectionData.total[idx - 1].label;
+                    return (
+                      <tr key={idx}>
+                        <td data-label="Thời gian">
+                          {showDate ? <strong>{fmtDate(item.label)}</strong> : <span className="text-muted" style={{opacity: 0.3}}>—</span>}
+                        </td>
+                        <td data-label="Tổng đơn" className="text-center">{Number(item.total_count).toLocaleString()}</td>
+                        <td data-label="Hoàn thành" className="text-center text-success">{Number(item.completed_count).toLocaleString()}</td>
+                        <td data-label="Đang xử lý" className="text-center text-warning">{Number(item.processing_count).toLocaleString()}</td>
+                        <td data-label="Từ chối" className="text-center text-danger">{Number(item.rejected_count).toLocaleString()}</td>
+                        <td data-label="Đã hủy" className="text-center text-muted">{Number(item.cancelled_count).toLocaleString()}</td>
+                        <td data-label="Doanh thu" className="text-right text-revenue font-bold">{fmt(item.total_amount)}</td>
+                        <td data-label="Phí khách" className="text-right text-fee">{fmt(item.total_fee)}</td>
+                        {isAdminPath && <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}>{fmt(item.total_base_fee)}</td>}
+                        {isAdminPath && <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a', fontWeight:700}}>{fmt(item.total_profit)}</td>}
+                      </tr>
+                    );
+                  })}
                 </tbody>
                 {sectionData.total.length > 0 && (
                   <tfoot>
@@ -340,39 +547,42 @@ const RevenueReport = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {sectionData.byStaff.map((s, idx) => (
-                      <tr key={idx}>
-                        <td data-label="Thời gian"><strong>{fmtDate(s.label)}</strong></td>
-                        <td data-label="Nhân viên">
-                          <div className="staff-info-cell">
-                            <strong>{s.staff_name}</strong>
-                            <small>ID: #{s.staff_id}</small>
-                          </div>
-                        </td>
-                        <td data-label="Tổng đơn" className="text-center">{Number(s.total_count).toLocaleString()}</td>
-                        <td data-label="Hoàn thành" className="text-center text-success">{Number(s.completed_count).toLocaleString()}</td>
-                        <td data-label="Hủy/Từ chối" className="text-center text-danger">{(Number(s.cancelled_count) + Number(s.rejected_count)).toLocaleString()}</td>
-                        <td data-label="Doanh thu" className="text-right text-revenue font-bold">{fmt(s.total_amount)}</td>
-                        <td data-label="Phí khách" className="text-right text-fee">{fmt(s.total_fee)}</td>
-                        <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}>{fmt(s.total_base_fee)}</td>
-                        <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a', fontWeight:700}}>{fmt(s.total_profit)}</td>
-                      </tr>
-                    ))}
+                    {sectionData.byStaff.map((s, idx) => {
+                      const showDate = idx === 0 || s.label !== sectionData.byStaff[idx - 1].label;
+                      return (
+                        <tr key={idx}>
+                          <td data-label="Thời gian">
+                            {showDate ? <strong>{fmtDate(s.label)}</strong> : <span className="text-muted" style={{opacity: 0.3}}>—</span>}
+                          </td>
+                          <td data-label="Nhân viên">
+                            <div className="staff-info-cell">
+                              <strong>{s.staff_name}</strong>
+                              <small>ID: #{s.staff_id}</small>
+                            </div>
+                          </td>
+                          <td data-label="Tổng đơn" className="text-center">{Number(s.total_count).toLocaleString()}</td>
+                          <td data-label="Hoàn thành" className="text-center text-success">{Number(s.completed_count).toLocaleString()}</td>
+                          <td data-label="Hủy/Từ chối" className="text-center text-danger">{(Number(s.cancelled_count) + Number(s.rejected_count)).toLocaleString()}</td>
+                          <td data-label="Doanh thu" className="text-right text-revenue font-bold">{fmt(s.total_amount)}</td>
+                          <td data-label="Phí khách" className="text-right text-fee">{fmt(s.total_fee)}</td>
+                          <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}>{fmt(s.total_base_fee)}</td>
+                          <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a', fontWeight:700}}>{fmt(s.total_profit)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
-                  {sectionData.byCustomer.length > 0 && (
-                    <tfoot>
-                      <tr className="total-row">
-                        <td data-label="Tổng cộng" colSpan={2}><strong>TỔNG CỘNG</strong></td>
-                        <td data-label="Tổng đơn" className="text-center"><strong>{sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_count||0),0).toLocaleString()}</strong></td>
-                        <td data-label="Hoàn thành" className="text-center text-success"><strong>{sectionData.byCustomer.reduce((a,c)=>a+Number(c.completed_count||0),0).toLocaleString()}</strong></td>
-                        <td data-label="Hủy/Từ chối" className="text-center text-danger"><strong>{sectionData.byCustomer.reduce((a,c)=>a+Number(c.cancelled_count||0)+Number(c.rejected_count||0),0).toLocaleString()}</strong></td>
-                        <td data-label="Doanh thu" className="text-right text-revenue"><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_amount||0),0))}</strong></td>
-                        <td data-label="Phí khách" className="text-right text-fee"><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_fee||0),0))}</strong></td>
-                        <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_base_fee||0),0))}</strong></td>
-                        <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a'}}><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_profit||0),0))}</strong></td>
-                      </tr>
-                    </tfoot>
-                  )}
+                  <tfoot>
+                    <tr className="total-row">
+                      <td data-label="Tổng cộng" colSpan={2}><strong>TỔNG CỘNG</strong></td>
+                      <td data-label="Tổng đơn" className="text-center"><strong>{sectionData.byStaff.reduce((a,s)=>a+Number(s.total_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Hoàn thành" className="text-center text-success"><strong>{sectionData.byStaff.reduce((a,s)=>a+Number(s.completed_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Hủy/Từ chối" className="text-center text-danger"><strong>{sectionData.byStaff.reduce((a,s)=>a+Number(s.cancelled_count||0)+Number(s.rejected_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Doanh thu" className="text-right text-revenue"><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_amount||0),0))}</strong></td>
+                      <td data-label="Phí khách" className="text-right text-fee"><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_fee||0),0))}</strong></td>
+                      <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_base_fee||0),0))}</strong></td>
+                      <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a'}}><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_profit||0),0))}</strong></td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             </div>
@@ -403,40 +613,43 @@ const RevenueReport = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {sectionData.byCustomer.map((c, idx) => (
-                      <tr key={idx}>
-                        <td data-label="Thời gian"><strong>{fmtDate(c.label)}</strong></td>
-                        <td data-label="Khách hàng">
-                          <div className="staff-info-cell">
-                            <strong>{c.customer_name || c.customer_email}</strong>
-                            <small>ID: #{c.customer_id}</small>
-                          </div>
-                        </td>
-                        <td data-label="Tổng đơn" className="text-center">{Number(c.total_count).toLocaleString()}</td>
-                        <td data-label="Hoàn thành" className="text-center text-success">{Number(c.completed_count).toLocaleString()}</td>
-                        <td data-label="Hủy/Từ chối" className="text-center text-danger">{(Number(c.cancelled_count) + Number(c.rejected_count)).toLocaleString()}</td>
-                        <td data-label="Doanh thu" className="text-right text-revenue font-bold">{fmt(c.total_amount)}</td>
-                        <td data-label="Phí khách" className="text-right text-fee">{fmt(c.total_fee)}</td>
-                        <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}>{fmt(c.total_base_fee)}</td>
-                        <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a', fontWeight:700}}>{fmt(c.total_profit)}</td>
-                      </tr>
-                  ))}
-                </tbody>
-                {sectionData.byQr.length > 0 && (
+                    {sectionData.byCustomer.map((c, idx) => {
+                      const showDate = idx === 0 || c.label !== sectionData.byCustomer[idx - 1].label;
+                      return (
+                        <tr key={idx}>
+                          <td data-label="Thời gian">
+                            {showDate ? <strong>{fmtDate(c.label)}</strong> : <span className="text-muted" style={{opacity: 0.3}}>—</span>}
+                          </td>
+                          <td data-label="Khách hàng">
+                            <div className="staff-info-cell">
+                              <strong>{c.customer_name || c.customer_email}</strong>
+                              <small>ID: #{c.customer_id}</small>
+                            </div>
+                          </td>
+                          <td data-label="Tổng đơn" className="text-center">{Number(c.total_count).toLocaleString()}</td>
+                          <td data-label="Hoàn thành" className="text-center text-success">{Number(c.completed_count).toLocaleString()}</td>
+                          <td data-label="Hủy/Từ chối" className="text-center text-danger">{(Number(c.cancelled_count) + Number(c.rejected_count)).toLocaleString()}</td>
+                          <td data-label="Doanh thu" className="text-right text-revenue font-bold">{fmt(c.total_amount)}</td>
+                          <td data-label="Phí khách" className="text-right text-fee">{fmt(c.total_fee)}</td>
+                          <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}>{fmt(c.total_base_fee)}</td>
+                          <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a', fontWeight:700}}>{fmt(c.total_profit)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
                   <tfoot>
                     <tr className="total-row">
                       <td data-label="Tổng cộng" colSpan={2}><strong>TỔNG CỘNG</strong></td>
-                      <td data-label="Tổng đơn" className="text-center"><strong>{sectionData.byQr.reduce((a,q)=>a+Number(q.total_count||0),0).toLocaleString()}</strong></td>
-                      <td data-label="Hoàn thành" className="text-center text-success"><strong>{sectionData.byQr.reduce((a,q)=>a+Number(q.completed_count||0),0).toLocaleString()}</strong></td>
-                      <td data-label="Hủy/Từ chối" className="text-center text-danger"><strong>{sectionData.byQr.reduce((a,q)=>a+Number(q.cancelled_count||0)+Number(q.rejected_count||0),0).toLocaleString()}</strong></td>
-                      <td data-label="Doanh thu" className="text-right text-revenue"><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_amount||0),0))}</strong></td>
-                      <td data-label="Phí khách" className="text-right text-fee"><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_fee||0),0))}</strong></td>
-                      {isAdminPath && <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_base_fee||0),0))}</strong></td>}
-                      {isAdminPath && <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a'}}><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_profit||0),0))}</strong></td>}
+                      <td data-label="Tổng đơn" className="text-center"><strong>{sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Hoàn thành" className="text-center text-success"><strong>{sectionData.byCustomer.reduce((a,c)=>a+Number(c.completed_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Hủy/Từ chối" className="text-center text-danger"><strong>{sectionData.byCustomer.reduce((a,c)=>a+Number(c.cancelled_count||0)+Number(c.rejected_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Doanh thu" className="text-right text-revenue"><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_amount||0),0))}</strong></td>
+                      <td data-label="Phí khách" className="text-right text-fee"><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_fee||0),0))}</strong></td>
+                      <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_base_fee||0),0))}</strong></td>
+                      <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a'}}><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_profit||0),0))}</strong></td>
                     </tr>
                   </tfoot>
-                )}
-              </table>
+                </table>
               </div>
             </div>
           )}
@@ -473,39 +686,44 @@ const RevenueReport = () => {
                 <tbody>
                   {sectionData.byQr.length === 0 ? (
                     <tr><td colSpan={isAdminPath ? 9 : 7} className="empty-state">Chưa có dữ liệu giao dịch trong kỳ này</td></tr>
-                  ) : sectionData.byQr.map((qr, idx) => (
-                    <tr key={idx}>
-                      <td data-label="Thời gian"><strong>{fmtDate(qr.label)}</strong></td>
-                      <td data-label="Thẻ QR">
-                        <div className="qr-id-cell">
-                          <span className="dot" />
-                          <div>
-                            <strong>{qr.qr_name || `QR #${qr.qr_id}`}</strong>
-                            <small>ID: #{qr.qr_id}</small>
+                  ) : sectionData.byQr.map((qr, idx) => {
+                    const showDate = idx === 0 || qr.label !== sectionData.byQr[idx - 1].label;
+                    return (
+                      <tr key={idx}>
+                        <td data-label="Thời gian">
+                          {showDate ? <strong>{fmtDate(qr.label)}</strong> : <span className="text-muted" style={{opacity: 0.3}}>—</span>}
+                        </td>
+                        <td data-label="Thẻ QR">
+                          <div className="qr-id-cell">
+                            <span className="dot" />
+                            <div>
+                              <strong>{qr.qr_name || `QR #${qr.qr_id}`}</strong>
+                              <small>ID: #{qr.qr_id}</small>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td data-label="Tổng đơn" className="text-center">{Number(qr.total_count).toLocaleString()}</td>
-                      <td data-label="Hoàn thành" className="text-center text-success">{Number(qr.completed_count).toLocaleString()}</td>
-                      <td data-label="Hủy/Từ chối" className="text-center text-danger">{(Number(qr.cancelled_count) + Number(qr.rejected_count)).toLocaleString()}</td>
-                      <td data-label="Doanh thu" className="text-right text-revenue font-bold">{fmt(qr.total_amount)}</td>
-                      <td data-label="Phí khách" className="text-right text-fee">{fmt(qr.total_fee)}</td>
-                      {isAdminPath && <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}>{fmt(qr.total_base_fee)}</td>}
-                      {isAdminPath && <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a', fontWeight:700}}>{fmt(qr.total_profit)}</td>}
-                    </tr>
-                  ))}
+                        </td>
+                        <td data-label="Tổng đơn" className="text-center">{Number(qr.total_count).toLocaleString()}</td>
+                        <td data-label="Hoàn thành" className="text-center text-success">{Number(qr.completed_count).toLocaleString()}</td>
+                        <td data-label="Hủy/Từ chối" className="text-center text-danger">{(Number(qr.cancelled_count) + Number(qr.rejected_count)).toLocaleString()}</td>
+                        <td data-label="Doanh thu" className="text-right text-revenue font-bold">{fmt(qr.total_amount)}</td>
+                        <td data-label="Phí khách" className="text-right text-fee">{fmt(qr.total_fee)}</td>
+                        {isAdminPath && <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}>{fmt(qr.total_base_fee)}</td>}
+                        {isAdminPath && <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a', fontWeight:700}}>{fmt(qr.total_profit)}</td>}
+                      </tr>
+                    );
+                  })}
                 </tbody>
-                {sectionData.byStaff.length > 0 && (
+                {sectionData.byQr.length > 0 && (
                   <tfoot>
                     <tr className="total-row">
                       <td data-label="Tổng cộng" colSpan={2}><strong>TỔNG CỘNG</strong></td>
-                      <td data-label="Tổng đơn" className="text-center"><strong>{sectionData.byStaff.reduce((a,s)=>a+Number(s.total_count||0),0).toLocaleString()}</strong></td>
-                      <td data-label="Hoàn thành" className="text-center text-success"><strong>{sectionData.byStaff.reduce((a,s)=>a+Number(s.completed_count||0),0).toLocaleString()}</strong></td>
-                      <td data-label="Hủy/Từ chối" className="text-center text-danger"><strong>{sectionData.byStaff.reduce((a,s)=>a+Number(s.cancelled_count||0)+Number(s.rejected_count||0),0).toLocaleString()}</strong></td>
-                      <td data-label="Doanh thu" className="text-right text-revenue"><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_amount||0),0))}</strong></td>
-                      <td data-label="Phí khách" className="text-right text-fee"><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_fee||0),0))}</strong></td>
-                      <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_base_fee||0),0))}</strong></td>
-                      <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a'}}><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_profit||0),0))}</strong></td>
+                      <td data-label="Tổng đơn" className="text-center"><strong>{sectionData.byQr.reduce((a,q)=>a+Number(q.total_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Hoàn thành" className="text-center text-success"><strong>{sectionData.byQr.reduce((a,q)=>a+Number(q.completed_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Hủy/Từ chối" className="text-center text-danger"><strong>{sectionData.byQr.reduce((a,q)=>a+Number(q.cancelled_count||0)+Number(q.rejected_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Doanh thu" className="text-right text-revenue"><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_amount||0),0))}</strong></td>
+                      <td data-label="Phí khách" className="text-right text-fee"><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_fee||0),0))}</strong></td>
+                      {isAdminPath && <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_base_fee||0),0))}</strong></td>}
+                      {isAdminPath && <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a'}}><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_profit||0),0))}</strong></td>}
                     </tr>
                   </tfoot>
                 )}

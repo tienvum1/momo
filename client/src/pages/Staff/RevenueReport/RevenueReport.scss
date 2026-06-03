@@ -78,6 +78,45 @@
         gap: 10px;
       }
 
+      .custom-period-pickers {
+        display: flex;
+        gap: 8px;
+
+        .day-picker-trigger {
+          padding: 8px 12px;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          background: #4f46e5;
+          color: white;
+          font-weight: 600;
+          font-size: 13px;
+          cursor: pointer;
+          transition: all 0.2s;
+          box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+
+          &:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+          }
+        }
+
+        select {
+          padding: 8px 12px;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          background: #f8fafc;
+          color: #475569;
+          font-weight: 600;
+          font-size: 13px;
+          outline: none;
+          cursor: pointer;
+
+          &:focus {
+            border-color: #4f46e5;
+          }
+        }
+      }
+
       .tab-switcher,
       .period-filter {
         display: flex;
@@ -121,6 +160,167 @@
   }
 
   // Summary Cards
+  // Day Picker Modal
+  .day-picker-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+
+    .day-picker-modal-content {
+      background: white;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      animation: slideUp 0.3s ease-out;
+      overflow: hidden;
+      padding: 16px;
+
+      .calendar-container {
+        .calendar-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          padding: 0 4px;
+
+          .month-year-display {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: lowercase;
+
+            .arrow-down {
+              font-size: 10px;
+              color: #000;
+            }
+          }
+
+          .header-nav {
+            display: flex;
+            gap: 16px;
+
+            .nav-btn {
+              background: none;
+              border: none;
+              font-size: 20px;
+              color: #000;
+              cursor: pointer;
+              padding: 0;
+              line-height: 1;
+              font-weight: 300;
+            }
+          }
+        }
+
+        .calendar-weekdays {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          margin-bottom: 12px;
+
+          span {
+            text-align: center;
+            font-size: 14px;
+            color: #000;
+            font-weight: 500;
+          }
+        }
+
+        .calendar-grid {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 4px;
+          margin-bottom: 16px;
+
+          .calendar-day {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.2s;
+
+            &.other-month {
+              color: #94a3b8;
+            }
+
+            &.active {
+              background: #1a73e8;
+              color: white;
+              font-weight: 700;
+              border-radius: 4px;
+            }
+
+            &:hover:not(.active) {
+              background: #f1f5f9;
+            }
+          }
+        }
+
+        .calendar-footer {
+          display: flex;
+          justify-content: space-between;
+          padding-top: 12px;
+          border-top: 1px solid #f1f5f9;
+
+          .footer-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a73e8;
+            cursor: pointer;
+            padding: 4px 8px;
+
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
   .stats-summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

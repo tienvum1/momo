@@ -3,19 +3,46 @@ const pool = require("../config/db").pool;
 const getRevenueStats = async (req, res) => {
   try {
     const staff_id = req.user.id;
-    const { type } = req.query;
+    const { type, month, year, day } = req.query;
     
+    // Lấy thời gian hiện tại theo múi giờ VN
+    const now = new Date();
+    const vnTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
+    const currentYear = year ? parseInt(year) : vnTime.getUTCFullYear();
+    const currentMonth = month ? (month === 'all' ? 'all' : parseInt(month)) : (vnTime.getUTCMonth() + 1);
+    const currentDay = day ? (day === 'all' ? 'all' : parseInt(day)) : 'all'; // Mặc định là tất cả ngày
+    
+    // Định dạng chuỗi YYYY-MM-DD để dùng trong SQL
+    const dateStr = (currentMonth !== 'all' && currentDay !== 'all') 
+      ? `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`
+      : null;
+    const monthStr = currentMonth === 'all' ? null : `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+    const yearStr = `${currentYear}`;
+
     let dateFormat = '%Y-%m-%d';
-    let currentFilter = "DATE(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
-    let periodFilter  = "DATE_FORMAT(CONVERT_TZ(b.created_at, '+00:00', '+07:00'), '%Y-%m') = DATE_FORMAT(CONVERT_TZ(NOW(), '+00:00', '+07:00'), '%Y-%m')";
+    // Mặc định: Xem theo ngày
+    let currentFilter = "";
+    if (currentMonth === 'all') {
+      currentFilter = `YEAR(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = '${yearStr}'`;
+    } else if (currentDay === 'all') {
+      currentFilter = `DATE_FORMAT(CONVERT_TZ(b.created_at, '+00:00', '+07:00'), '%Y-%m') = '${monthStr}'`;
+    } else {
+      currentFilter = `DATE(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = '${dateStr}'`;
+    }
+    
+    let periodFilter = currentFilter;
     
     if (type === 'month') {
+      // Xem theo tháng
       dateFormat    = '%Y-%m';
-      currentFilter = "DATE_FORMAT(CONVERT_TZ(b.created_at, '+00:00', '+07:00'), '%Y-%m') = DATE_FORMAT(CONVERT_TZ(NOW(), '+00:00', '+07:00'), '%Y-%m')";
-      periodFilter  = "YEAR(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+      // Nếu chọn "Tất cả tháng", periodFilter là cả năm. Nếu chọn tháng cụ thể, chỉ hiện tháng đó.
+      periodFilter  = currentMonth === 'all'
+        ? `YEAR(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = '${yearStr}'`
+        : `DATE_FORMAT(CONVERT_TZ(b.created_at, '+00:00', '+07:00'), '%Y-%m') = '${monthStr}'`;
     } else if (type === 'year') {
+      // Xem theo năm
       dateFormat    = '%Y';
-      currentFilter = "YEAR(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+      currentFilter = `YEAR(CONVERT_TZ(b.created_at, '+00:00', '+07:00')) = '${yearStr}'`;
       periodFilter  = "1=1";
     }
 
