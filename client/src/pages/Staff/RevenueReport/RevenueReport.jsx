@@ -20,7 +20,7 @@ const RevenueReport = () => {
   const isAdminPath = location.pathname.startsWith('/admin');
   const [reportType, setReportType] = useState('day');
   const [data, setData] = useState({
-    global:   { summary: {}, total: [], byQr: [], byStaff: [] },
+    global:   { summary: {}, total: [], byQr: [], byStaff: [], byCustomer: [] },
     personal: { summary: {}, total: [], byQr: [] }
   });
   const [loading, setLoading] = useState(true);
@@ -359,7 +359,84 @@ const RevenueReport = () => {
                       </tr>
                     ))}
                   </tbody>
+                  {sectionData.byCustomer.length > 0 && (
+                    <tfoot>
+                      <tr className="total-row">
+                        <td data-label="Tổng cộng" colSpan={2}><strong>TỔNG CỘNG</strong></td>
+                        <td data-label="Tổng đơn" className="text-center"><strong>{sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_count||0),0).toLocaleString()}</strong></td>
+                        <td data-label="Hoàn thành" className="text-center text-success"><strong>{sectionData.byCustomer.reduce((a,c)=>a+Number(c.completed_count||0),0).toLocaleString()}</strong></td>
+                        <td data-label="Hủy/Từ chối" className="text-center text-danger"><strong>{sectionData.byCustomer.reduce((a,c)=>a+Number(c.cancelled_count||0)+Number(c.rejected_count||0),0).toLocaleString()}</strong></td>
+                        <td data-label="Doanh thu" className="text-right text-revenue"><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_amount||0),0))}</strong></td>
+                        <td data-label="Phí khách" className="text-right text-fee"><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_fee||0),0))}</strong></td>
+                        <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_base_fee||0),0))}</strong></td>
+                        <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a'}}><strong>{fmt(sectionData.byCustomer.reduce((a,c)=>a+Number(c.total_profit||0),0))}</strong></td>
+                      </tr>
+                    </tfoot>
+                  )}
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* Bảng theo khách hàng (chỉ admin) */}
+          {isAdminPath && sectionData.byCustomer && sectionData.byCustomer.length > 0 && (
+            <div className="table-card customer-revenue-table">
+              <div className="card-header">
+                <div className="header-left">
+                  <h3>Thống kê theo khách hàng ({fullPeriodLabel})</h3>
+                  <p>Hiệu suất và tổng tiền theo từng người tạo đơn</p>
+                </div>
+              </div>
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Thời gian</th>
+                      <th>Khách hàng</th>
+                      <th className="text-center">Tổng đơn</th>
+                      <th className="text-center text-success">Hoàn thành</th>
+                      <th className="text-center text-danger">Hủy/Từ chối</th>
+                      <th className="text-right text-revenue">Doanh thu</th>
+                      <th className="text-right text-fee">Phí khách</th>
+                      <th className="text-right" style={{color:'#ea580c'}}>Phí gốc</th>
+                      <th className="text-right" style={{color:'#16a34a'}}>Lợi nhuận</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sectionData.byCustomer.map((c, idx) => (
+                      <tr key={idx}>
+                        <td data-label="Thời gian"><strong>{fmtDate(c.label)}</strong></td>
+                        <td data-label="Khách hàng">
+                          <div className="staff-info-cell">
+                            <strong>{c.customer_name || c.customer_email}</strong>
+                            <small>ID: #{c.customer_id}</small>
+                          </div>
+                        </td>
+                        <td data-label="Tổng đơn" className="text-center">{Number(c.total_count).toLocaleString()}</td>
+                        <td data-label="Hoàn thành" className="text-center text-success">{Number(c.completed_count).toLocaleString()}</td>
+                        <td data-label="Hủy/Từ chối" className="text-center text-danger">{(Number(c.cancelled_count) + Number(c.rejected_count)).toLocaleString()}</td>
+                        <td data-label="Doanh thu" className="text-right text-revenue font-bold">{fmt(c.total_amount)}</td>
+                        <td data-label="Phí khách" className="text-right text-fee">{fmt(c.total_fee)}</td>
+                        <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}>{fmt(c.total_base_fee)}</td>
+                        <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a', fontWeight:700}}>{fmt(c.total_profit)}</td>
+                      </tr>
+                  ))}
+                </tbody>
+                {sectionData.byQr.length > 0 && (
+                  <tfoot>
+                    <tr className="total-row">
+                      <td data-label="Tổng cộng" colSpan={2}><strong>TỔNG CỘNG</strong></td>
+                      <td data-label="Tổng đơn" className="text-center"><strong>{sectionData.byQr.reduce((a,q)=>a+Number(q.total_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Hoàn thành" className="text-center text-success"><strong>{sectionData.byQr.reduce((a,q)=>a+Number(q.completed_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Hủy/Từ chối" className="text-center text-danger"><strong>{sectionData.byQr.reduce((a,q)=>a+Number(q.cancelled_count||0)+Number(q.rejected_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Doanh thu" className="text-right text-revenue"><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_amount||0),0))}</strong></td>
+                      <td data-label="Phí khách" className="text-right text-fee"><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_fee||0),0))}</strong></td>
+                      {isAdminPath && <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_base_fee||0),0))}</strong></td>}
+                      {isAdminPath && <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a'}}><strong>{fmt(sectionData.byQr.reduce((a,q)=>a+Number(q.total_profit||0),0))}</strong></td>}
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
               </div>
             </div>
           )}
@@ -418,6 +495,20 @@ const RevenueReport = () => {
                     </tr>
                   ))}
                 </tbody>
+                {sectionData.byStaff.length > 0 && (
+                  <tfoot>
+                    <tr className="total-row">
+                      <td data-label="Tổng cộng" colSpan={2}><strong>TỔNG CỘNG</strong></td>
+                      <td data-label="Tổng đơn" className="text-center"><strong>{sectionData.byStaff.reduce((a,s)=>a+Number(s.total_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Hoàn thành" className="text-center text-success"><strong>{sectionData.byStaff.reduce((a,s)=>a+Number(s.completed_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Hủy/Từ chối" className="text-center text-danger"><strong>{sectionData.byStaff.reduce((a,s)=>a+Number(s.cancelled_count||0)+Number(s.rejected_count||0),0).toLocaleString()}</strong></td>
+                      <td data-label="Doanh thu" className="text-right text-revenue"><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_amount||0),0))}</strong></td>
+                      <td data-label="Phí khách" className="text-right text-fee"><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_fee||0),0))}</strong></td>
+                      <td data-label="Phí gốc" className="text-right" style={{color:'#ea580c'}}><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_base_fee||0),0))}</strong></td>
+                      <td data-label="Lợi nhuận" className="text-right" style={{color:'#16a34a'}}><strong>{fmt(sectionData.byStaff.reduce((a,s)=>a+Number(s.total_profit||0),0))}</strong></td>
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </div>
           </div>

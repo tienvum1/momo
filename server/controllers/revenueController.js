@@ -89,7 +89,22 @@ const getRevenueStats = async (req, res) => {
       ORDER BY label DESC, total_amount DESC
     `, [dateFormat]);
 
-    // 4. Personal — theo thời gian
+    // 4. Global — theo khách hàng (Người tạo đơn)
+    const [globalByCustomer] = await pool.query(`
+      SELECT 
+        DATE_FORMAT(CONVERT_TZ(b.created_at, '+00:00', '+07:00'), ?) as label,
+        u.id as customer_id,
+        u.full_name as customer_name,
+        u.email as customer_email,
+        ${financeFields()}
+      FROM bookings b
+      JOIN users u ON u.id = b.customer_id
+      WHERE ${periodFilter}
+      GROUP BY label, u.id
+      ORDER BY label DESC, total_amount DESC
+    `, [dateFormat]);
+
+    // 5. Personal — theo thời gian
     const [personalTotal] = await pool.query(`
       SELECT 
         DATE_FORMAT(CONVERT_TZ(b.created_at, '+00:00', '+07:00'), ?) as label,
@@ -119,7 +134,8 @@ const getRevenueStats = async (req, res) => {
         summary: globalSummary,
         total: globalTotal,
         byQr: globalByQr,
-        byStaff: globalByStaff
+        byStaff: globalByStaff,
+        byCustomer: globalByCustomer
       },
       personal: {
         summary: personalSummary,

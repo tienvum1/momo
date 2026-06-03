@@ -320,6 +320,7 @@ const UserManager = () => {
           <table className="excel-table">
             <thead>
               <tr>
+                <th className="id-col">ID</th>
                 <th>Vai trò & Quyền</th>
                 <th>Thông tin tài khoản</th>
                 <th>Ngày tham gia</th>
@@ -340,6 +341,9 @@ const UserManager = () => {
               ) : (
                 users.map(user => (
                   <tr key={user.id}>
+                    <td data-label="ID" className="id-col">
+                      <span className="id-badge">#{user.id}</span>
+                    </td>
                     <td data-label="Vai trò & Quyền">
                       <div className="user-info-cell">
                 
