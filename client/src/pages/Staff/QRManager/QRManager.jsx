@@ -28,6 +28,7 @@ const StaffQRManager = () => {
   const [feeRateL3, setFeeRateL3] = useState('');
   const [note, setNote] = useState('');
   const [status, setStatus] = useState('ready');
+  const [isNotifyTelegram, setIsNotifyTelegram] = useState(true);
 
   const refreshQRs = async () => {
     try {
@@ -64,6 +65,7 @@ const StaffQRManager = () => {
     setFeeRateL3('');
     setNote('');
     setStatus('ready');
+    setIsNotifyTelegram(true);
     setEditingQr(null);
   };
 
@@ -78,6 +80,7 @@ const StaffQRManager = () => {
     setFeeRateL3(qr.fee_rate_l3 || '');
     setNote(qr.note || '');
     setStatus(qr.status || 'ready');
+    setIsNotifyTelegram(qr.is_notify_telegram ?? true);
     setShowModal(true);
   };
 
@@ -111,6 +114,7 @@ const StaffQRManager = () => {
     formData.append('fee_rate_l3', feeRateL3);
     formData.append('note', note);
     formData.append('status', status);
+    formData.append('is_notify_telegram', isNotifyTelegram ? '1' : '0');
     
     try {
       if (editingQr) {
@@ -158,6 +162,17 @@ const StaffQRManager = () => {
       console.error(err);
     } finally {
       setTogglingEditId(null);
+    }
+  };
+
+  const handleToggleNotifyTele = async (qr) => {
+    try {
+      const formData = new FormData();
+      formData.append('is_notify_telegram', qr.is_notify_telegram ? '0' : '1');
+      await api.put(`/qrs/${qr.id}`, formData);
+      await refreshQRs();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -213,6 +228,7 @@ const StaffQRManager = () => {
               <th className="th-fee">Phí L2</th>
               <th className="th-fee">Phí L3</th>
               <th className="th-status">Trạng thái QR</th>
+              <th className="th-status">Thông báo Tele</th>
               <th className="th-status">Kế toán sửa</th>
               <th className="th-actions">Thao tác</th>
             </tr>
@@ -261,6 +277,15 @@ const StaffQRManager = () => {
                         disabled={updatingId === qr.id}
                       >
                         {statusText}
+                      </button>
+                    </td>
+                    <td data-label="Thông báo Tele" className="td-status">
+                      <button
+                        type="button"
+                        className={`status-toggle-btn ${qr.is_notify_telegram ? 'active' : 'inactive'}`}
+                        onClick={() => handleToggleNotifyTele(qr)}
+                      >
+                        {qr.is_notify_telegram ? '✓ Bật' : '✗ Tắt'}
                       </button>
                     </td>
                     <td data-label="Kế toán sửa" className="td-status">
@@ -357,6 +382,12 @@ const StaffQRManager = () => {
                     onClick={() => handleToggleAccountantEditable(qr)}
                   >
                     {qr.accountant_editable ? '● Kế toán: Được sửa' : '● Kế toán: Tắt sửa'}
+                  </div>
+                  <div 
+                    className={`status-pill tele-notify ${qr.is_notify_telegram ? 'active' : ''}`} 
+                    onClick={() => handleToggleNotifyTele(qr)}
+                  >
+                    {qr.is_notify_telegram ? '● Tele: Bật' : '● Tele: Tắt'}
                   </div>
                 </div>
 
@@ -456,6 +487,16 @@ const StaffQRManager = () => {
                   <option value="ready">Sẵn sàng</option>
                   <option value="maintenance">Bảo trì</option>
                 </select>
+              </div>
+              <div className="form-group checkbox-group">
+                <label className="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    checked={isNotifyTelegram} 
+                    onChange={(e) => setIsNotifyTelegram(e.target.checked)} 
+                  />
+                  Gửi thông báo Telegram khi có đơn mới
+                </label>
               </div>
               <div className="modal-actions">
                 <button type="submit" className="save-btn" disabled={submitting}>

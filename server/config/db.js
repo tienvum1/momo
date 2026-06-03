@@ -64,6 +64,7 @@ const initDB = async () => {
         max_amount_per_trans DECIMAL(15,2) NULL,
         status ENUM('ready', 'maintenance') DEFAULT 'ready',
         accountant_editable TINYINT(1) DEFAULT 0,
+        is_notify_telegram TINYINT(1) DEFAULT 1,
         note TEXT NULL,
         creator_id INT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -260,6 +261,7 @@ const initDB = async () => {
       if (!qrColNames.includes('fee_rate_l2')) await connection.query("ALTER TABLE qrs ADD COLUMN fee_rate_l2 DECIMAL(5,2) DEFAULT 0 AFTER fee_rate_l1");
       if (!qrColNames.includes('fee_rate_l3')) await connection.query("ALTER TABLE qrs ADD COLUMN fee_rate_l3 DECIMAL(5,2) DEFAULT 0 AFTER fee_rate_l2");
       if (!qrColNames.includes('accountant_editable')) await connection.query("ALTER TABLE qrs ADD COLUMN accountant_editable TINYINT(1) DEFAULT 0 AFTER status");
+      if (!qrColNames.includes('is_notify_telegram')) await connection.query("ALTER TABLE qrs ADD COLUMN is_notify_telegram TINYINT(1) DEFAULT 1 AFTER accountant_editable");
     } catch (err) { console.error('Lỗi migration qrs:', err.message); }
 
     // bookings — migrate dữ liệu cũ accountant_paid

@@ -268,15 +268,24 @@ const submitCustomerPaid = async (req, res) => {
       }).catch(err => console.error("Lỗi lấy danh sách staff để gửi thông báo:", err));
     }
 
-    // Gửi thông báo Telegram khi khách nộp bill
-    const telegramMsg = `💸 <b>ĐƠN HÀNG MỚI</b>\n` +
-      `------------------------\n` +
-      `📝 Mã đơn: <code>${booking.code.slice(-6)}</code>\n` +
-      `💰 Số tiền: <b>${Math.round(booking.transfer_amount).toLocaleString('vi-VN')} VNĐ</b>\n` +
-      `------------------------\n` +
-      `📸 <i>Đã đính kèm ảnh bill. Vui lòng xác nhận!</i>`;
-    
-    sendTelegramMessage(telegramMsg);
+    // Gửi thông báo Telegram khi khách nộp bill (nếu QR có bật thông báo)
+    const [qrConfig] = await pool.query(
+      "SELECT q.is_notify_telegram FROM qrs q JOIN bookings b ON q.id = b.qr_id WHERE b.id = ?",
+      [bookingId]
+    );
+
+    if (qrConfig.length > 0 && qrConfig[0].is_notify_telegram) {
+      const telegramMsg = `💸 <b>ĐƠN HÀNG MỚI</b>\n` +
+        `------------------------\n` +
+        `📝 Mã đơn: <code>${booking.code.slice(-6)}</code>\n` +
+        `💰 Số tiền: <b>${Math.round(booking.transfer_amount).toLocaleString('vi-VN')} VNĐ</b>\n` +
+        `👤 Người tạo đơn: ${booking.customer_account_holder}\n` +
+        `🏦 Ngân hàng nhận: ${booking.admin_bank_name}\n` +
+        `------------------------\n` +
+        `📸 <i>Đã đính kèm ảnh bill. Vui lòng xác nhận!</i>`;
+      
+      sendTelegramMessage(telegramMsg);
+    }
 
     const [rows] = await pool.query(
       "SELECT * FROM bookings WHERE id = ? LIMIT 1",

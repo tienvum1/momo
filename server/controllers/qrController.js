@@ -20,7 +20,7 @@ const createQR = async (req, res) => {
   try {
     const { 
       name, max_amount_per_trans, fee_rate, base_fee_rate, fee_rate_l1, fee_rate_l2, fee_rate_l3, 
-      note, status 
+      note, status, is_notify_telegram 
     } = req.body;
     const creator_id = req.user.id;
     
@@ -32,13 +32,14 @@ const createQR = async (req, res) => {
     }
 
     const qrStatus = status || 'ready';
+    const notifyTele = is_notify_telegram === undefined ? 1 : (is_notify_telegram ? 1 : 0);
 
     const [result] = await pool.query(
-      'INSERT INTO qrs (name, main_image, qr_image, max_amount_per_trans, base_fee_rate, fee_rate, fee_rate_l1, fee_rate_l2, fee_rate_l3, note, status, creator_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO qrs (name, main_image, qr_image, max_amount_per_trans, base_fee_rate, fee_rate, fee_rate_l1, fee_rate_l2, fee_rate_l3, note, status, creator_id, is_notify_telegram) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         name || null, main_image, qr_image, max_amount_per_trans, 
         base_fee_rate || 0, fee_rate || 0, fee_rate_l1 || 0, fee_rate_l2 || 0, fee_rate_l3 || 0, 
-        note, qrStatus, creator_id
+        note, qrStatus, creator_id, notifyTele
       ]
     );
 
@@ -53,7 +54,8 @@ const createQR = async (req, res) => {
         fee_rate,
         note,
         status: qrStatus,
-        creator_id
+        creator_id,
+        is_notify_telegram: !!notifyTele
       }
     });
   } catch (err) {
@@ -67,7 +69,7 @@ const updateQR = async (req, res) => {
   try {
     const { 
       name, max_amount_per_trans, fee_rate, base_fee_rate, fee_rate_l1, fee_rate_l2, fee_rate_l3, 
-      note, status 
+      note, status, is_notify_telegram 
     } = req.body;
     const qrId = req.params.id;
 
@@ -97,13 +99,14 @@ const updateQR = async (req, res) => {
     const updatedFeeL3 = fee_rate_l3 ?? existing[0].fee_rate_l3;
     const updatedNote = note ?? existing[0].note;
     const qrStatus = status || existing[0].status;
+    const notifyTele = is_notify_telegram !== undefined ? (is_notify_telegram ? 1 : 0) : existing[0].is_notify_telegram;
 
     await pool.query(
-      'UPDATE qrs SET name = ?, main_image = ?, qr_image = ?, max_amount_per_trans = ?, base_fee_rate = ?, fee_rate = ?, fee_rate_l1 = ?, fee_rate_l2 = ?, fee_rate_l3 = ?, note = ?, status = ? WHERE id = ?',
+      'UPDATE qrs SET name = ?, main_image = ?, qr_image = ?, max_amount_per_trans = ?, base_fee_rate = ?, fee_rate = ?, fee_rate_l1 = ?, fee_rate_l2 = ?, fee_rate_l3 = ?, note = ?, status = ?, is_notify_telegram = ? WHERE id = ?',
       [
         updatedName, main_image, qr_image, updatedMaxAmount, 
         updatedBaseFee, updatedFeeDefault, updatedFeeL1, updatedFeeL2, updatedFeeL3,
-        updatedNote, qrStatus, qrId
+        updatedNote, qrStatus, notifyTele, qrId
       ]
     );
 

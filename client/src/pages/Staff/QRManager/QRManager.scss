@@ -233,9 +233,10 @@
             }
           }
         }
-        
+
         .card-row.note-row {
           align-items: flex-start;
+
           .row-label {
             padding-top: 2px;
           }
@@ -324,9 +325,21 @@
             border-color: #e2e8f0;
 
             &.active {
-              background: #eef2ff;
-              color: #4f46e5;
-              border-color: #c7d2fe;
+              background: #f0f9ff;
+              color: #0369a1;
+              border-color: #bae6fd;
+            }
+          }
+
+          &.tele-notify {
+            background: #f1f5f9;
+            color: #475569;
+            border-color: #e2e8f0;
+
+            &.active {
+              background: #f5f3ff;
+              color: #7c3aed;
+              border-color: #ddd6fe;
             }
           }
         }
@@ -700,56 +713,74 @@
         resize: vertical;
       }
 
-      .current-img-hint {
-        font-size: 12px;
-        color: #10b981;
-        font-weight: 600;
+      &.checkbox-group {
+        .checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          cursor: pointer;
+          font-weight: 600;
+          color: #1e293b;
+          font-size: 14px;
+
+          input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+          }
+        }
       }
     }
 
-    .fee-levels-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+    .current-img-hint {
+      font-size: 12px;
+      color: #10b981;
+      font-weight: 600;
+    }
+  }
 
-      @media (max-width: 480px) {
-        grid-template-columns: 1fr;
+  .fee-levels-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+
+    button {
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .save-btn {
+      background: #4f46e5;
+      color: white;
+      border: none;
+
+      &:hover {
+        background: #4338ca;
       }
     }
 
-    .modal-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 12px;
+    .cancel-btn {
+      background: #f1f5f9;
+      color: #475569;
+      border: none;
 
-      button {
-        padding: 12px;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 15px;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .save-btn {
-        background: #4f46e5;
-        color: white;
-        border: none;
-
-        &:hover {
-          background: #4338ca;
-        }
-      }
-
-      .cancel-btn {
-        background: #f1f5f9;
-        color: #475569;
-        border: none;
-
-        &:hover {
-          background: #e2e8f0;
-        }
+      &:hover {
+        background: #e2e8f0;
       }
     }
   }
