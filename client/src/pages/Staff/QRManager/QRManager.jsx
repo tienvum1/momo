@@ -14,6 +14,7 @@ const StaffQRManager = () => {
   const [togglingEditId, setTogglingEditId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState(null);
+  const [expandedNotes, setExpandedNotes] = useState({});
   
   // Form states
   const [mainImageFile, setMainImageFile] = useState(null);
@@ -310,13 +311,25 @@ const StaffQRManager = () => {
                     <span className="row-label">Hạn mức</span>
                     <span className="row-value money">{formatMoney(qr.max_amount_per_trans)} VNĐ</span>
                   </div>
-                  <div className="card-row">
+                  <div className="card-row note-row">
                     <span className="row-label">Ghi chú</span>
-                    <span className="row-value note">{qr.note || '—'}</span>
+                    <div 
+                      className={`row-value note ${expandedNotes[qr.id] ? 'expanded' : ''}`}
+                      onClick={() => qr.note && setExpandedNotes(prev => ({ ...prev, [qr.id]: !prev[qr.id] }))}
+                    >
+                      {qr.note || '—'}
+                      {!expandedNotes[qr.id] && qr.note && qr.note.split('\n').length > 3 && (
+                        <span className="expand-trigger">...</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="fee-grid">
+                  <div className="fee-item">
+                    <span className="fee-label">Phí gốc</span>
+                    <span className="fee-val base">{qr.base_fee_rate || 0}%</span>
+                  </div>
                   <div className="fee-item">
                     <span className="fee-label">Phí mặc định</span>
                     <span className="fee-val def">{qr.fee_rate}%</span>

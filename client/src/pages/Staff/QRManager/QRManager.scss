@@ -213,7 +213,31 @@
               font-size: 14px;
               font-weight: 700;
               color: #0f172a;
+              display: -webkit-box;
+              -webkit-line-clamp: 3;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+              word-break: break-word;
+              line-height: 1.4;
+
+              &.expanded {
+                -webkit-line-clamp: unset;
+                max-width: 100%;
+              }
+
+              .expand-trigger {
+                color: #4f46e5;
+                font-weight: 800;
+                padding: 0 4px;
+              }
             }
+          }
+        }
+        
+        .card-row.note-row {
+          align-items: flex-start;
+          .row-label {
+            padding-top: 2px;
           }
         }
       }
@@ -221,30 +245,36 @@
       .fee-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 10px;
+        gap: 8px;
         margin-bottom: 20px;
 
         .fee-item {
           background: #f8fafc;
           border: 1px solid #f1f5f9;
           border-radius: 12px;
-          padding: 10px 16px;
+          padding: 8px 12px;
           display: flex;
           justify-content: space-between;
           align-items: center;
 
+          &:first-child {
+            grid-column: span 2;
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+          }
+
           .fee-label {
-            font-size: 13px;
-            color: #94a3b8;
-            font-weight: 500;
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
           }
 
           .fee-val {
             font-size: 14px;
             font-weight: 800;
 
-            &.def {
-              color: #4f46e5;
+            &.base {
+              color: #475569;
             }
 
             &.l1 {
