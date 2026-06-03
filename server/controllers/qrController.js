@@ -15,6 +15,13 @@ const deleteCloudinaryImage = async (url) => {
   }
 };
 
+const parseTinyIntBoolean = (value, fallback = 1) => {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (value === true || value === 1 || value === '1' || value === 'true') return 1;
+  if (value === false || value === 0 || value === '0' || value === 'false') return 0;
+  return fallback;
+};
+
 // Tạo mới một QR
 const createQR = async (req, res) => {
   try {
@@ -32,7 +39,7 @@ const createQR = async (req, res) => {
     }
 
     const qrStatus = status || 'ready';
-    const notifyTele = is_notify_telegram === undefined ? 1 : (is_notify_telegram ? 1 : 0);
+    const notifyTele = parseTinyIntBoolean(is_notify_telegram, 1);
 
     const [result] = await pool.query(
       'INSERT INTO qrs (name, main_image, qr_image, max_amount_per_trans, base_fee_rate, fee_rate, fee_rate_l1, fee_rate_l2, fee_rate_l3, note, status, creator_id, is_notify_telegram) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -99,7 +106,7 @@ const updateQR = async (req, res) => {
     const updatedFeeL3 = fee_rate_l3 ?? existing[0].fee_rate_l3;
     const updatedNote = note ?? existing[0].note;
     const qrStatus = status || existing[0].status;
-    const notifyTele = is_notify_telegram !== undefined ? (is_notify_telegram ? 1 : 0) : existing[0].is_notify_telegram;
+    const notifyTele = parseTinyIntBoolean(is_notify_telegram, existing[0].is_notify_telegram);
 
     await pool.query(
       'UPDATE qrs SET name = ?, main_image = ?, qr_image = ?, max_amount_per_trans = ?, base_fee_rate = ?, fee_rate = ?, fee_rate_l1 = ?, fee_rate_l2 = ?, fee_rate_l3 = ?, note = ?, status = ?, is_notify_telegram = ? WHERE id = ?',

@@ -12,6 +12,7 @@ const StaffQRManager = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [updatingId, setUpdatingId] = useState(null);
   const [togglingEditId, setTogglingEditId] = useState(null);
+  const [togglingNotifyId, setTogglingNotifyId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState(null);
   const [expandedNotes, setExpandedNotes] = useState({});
@@ -166,13 +167,23 @@ const StaffQRManager = () => {
   };
 
   const handleToggleNotifyTele = async (qr) => {
+    if (togglingNotifyId === qr.id) return;
+    const nextNotifyState = !qr.is_notify_telegram;
+    setTogglingNotifyId(qr.id);
     try {
       const formData = new FormData();
-      formData.append('is_notify_telegram', qr.is_notify_telegram ? '0' : '1');
+      formData.append('is_notify_telegram', nextNotifyState ? '1' : '0');
       await api.put(`/qrs/${qr.id}`, formData);
-      await refreshQRs();
+      setQrs((prev) =>
+        prev.map((item) =>
+          item.id === qr.id ? { ...item, is_notify_telegram: nextNotifyState } : item
+        )
+      );
     } catch (err) {
       console.error(err);
+      await refreshQRs();
+    } finally {
+      setTogglingNotifyId(null);
     }
   };
 
@@ -284,8 +295,9 @@ const StaffQRManager = () => {
                         type="button"
                         className={`status-toggle-btn ${qr.is_notify_telegram ? 'active' : 'inactive'}`}
                         onClick={() => handleToggleNotifyTele(qr)}
+                        disabled={togglingNotifyId === qr.id}
                       >
-                        {qr.is_notify_telegram ? '✓ Bật' : '✗ Tắt'}
+                        {togglingNotifyId === qr.id ? 'Đang lưu...' : qr.is_notify_telegram ? '✓ Bật' : '✗ Tắt'}
                       </button>
                     </td>
                     <td data-label="Kế toán sửa" className="td-status">
@@ -387,7 +399,7 @@ const StaffQRManager = () => {
                     className={`status-pill tele-notify ${qr.is_notify_telegram ? 'active' : ''}`} 
                     onClick={() => handleToggleNotifyTele(qr)}
                   >
-                    {qr.is_notify_telegram ? '● Tele: Bật' : '● Tele: Tắt'}
+                    {togglingNotifyId === qr.id ? '● Tele: Đang lưu...' : qr.is_notify_telegram ? '● Tele: Bật' : '● Tele: Tắt'}
                   </div>
                 </div>
 

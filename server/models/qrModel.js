@@ -11,6 +11,7 @@ const qrFields = {
   fee_rate_l3: 'DECIMAL(5, 2) DEFAULT 0', // Phí cho thành viên cấp 3
   note: 'TEXT', // Ghi chú
   status: "ENUM('ready', 'maintenance') DEFAULT 'ready'", // Trạng thái QR
+  accountant_editable: 'TINYINT(1) DEFAULT 0', // Bật/tắt quyền cho kế toán chỉnh sửa QR
   is_notify_telegram: 'TINYINT(1) DEFAULT 1', // Bật/tắt gửi thông báo về Telegram
   creator_id: 'INT NOT NULL', // Người tạo (FK tới users)
   created_at: 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP',

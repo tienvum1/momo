@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const pool = require("../config/db").pool;
 const { createNotification } = require("../utils/notificationHelper");
-const { sendTelegramMessage } = require("../utils/telegram");
+const { sendTelegramMessage, sendTelegramPhoto } = require("../utils/telegram");
 
 const generateCode = () => {
   if (crypto.randomUUID) return crypto.randomUUID();
@@ -274,17 +274,27 @@ const submitCustomerPaid = async (req, res) => {
       [bookingId]
     );
 
+    // #region debug-point A:telegram-bill-input
+    (()=>{const fs=require('fs');let u='http://127.0.0.1:7777/event',s='telegram-bill-photo';try{const e=fs.readFileSync('.dbg/telegram-bill-photo.env','utf8');u=e.match(/DEBUG_SERVER_URL=(.+)/)?.[1]||u;s=e.match(/DEBUG_SESSION_ID=(.+)/)?.[1]||s}catch{}fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:s,runId:'pre-fix',hypothesisId:'A',location:'bookingController.js:submitCustomerPaid',msg:'[DEBUG] customer bill telegram payload prepared',data:{bookingId,mainProofUrl,proofCount:proofUrls.length,isNotifyTelegram:qrConfig?.[0]?.is_notify_telegram || 0},ts:Date.now()})}).catch(()=>{})})();
+    // #endregion
+
     if (qrConfig.length > 0 && qrConfig[0].is_notify_telegram) {
       const telegramMsg = `💸 <b>ĐƠN HÀNG MỚI</b>\n` +
         `------------------------\n` +
         `📝 Mã đơn: <code>${booking.code.slice(-6)}</code>\n` +
         `💰 Số tiền: <b>${Math.round(booking.transfer_amount).toLocaleString('vi-VN')} VNĐ</b>\n` +
-        `👤 Người tạo đơn: ${booking.customer_account_holder}\n` +
-        `🏦 Ngân hàng nhận: ${booking.admin_bank_name}\n` +
         `------------------------\n` +
         `📸 <i>Đã đính kèm ảnh bill. Vui lòng xác nhận!</i>`;
+
+      // #region debug-point C:telegram-dispatch-branch
+      (()=>{const fs=require('fs');let u='http://127.0.0.1:7777/event',s='telegram-bill-photo';try{const e=fs.readFileSync('.dbg/telegram-bill-photo.env','utf8');u=e.match(/DEBUG_SERVER_URL=(.+)/)?.[1]||u;s=e.match(/DEBUG_SESSION_ID=(.+)/)?.[1]||s}catch{}fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:s,runId:'pre-fix',hypothesisId:'C',location:'bookingController.js:submitCustomerPaid',msg:'[DEBUG] dispatching telegram notification',data:{bookingId,branch:mainProofUrl?'send-photo':'send-message',mainProofUrlPresent:!!mainProofUrl},ts:Date.now()})}).catch(()=>{})})();
+      // #endregion
       
-      sendTelegramMessage(telegramMsg);
+      if (mainProofUrl) {
+        sendTelegramPhoto(mainProofUrl, telegramMsg);
+      } else {
+        sendTelegramMessage(telegramMsg);
+      }
     }
 
     const [rows] = await pool.query(
