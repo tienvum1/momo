@@ -64,7 +64,7 @@ const Login = () => {
             <h2 className="intro-title">
               Đăng nhập để trải nghiệm
               <br />
-              <span className="title-highlight">thanh toán tiện lợi</span>
+              <span className="title-highlight">dịch vụ rút ví trả sau</span>
               <br />
               cùng momo247
             </h2>
@@ -85,7 +85,7 @@ const Login = () => {
                   <i className="fas fa-bolt"></i>
                 </div>
                 <div className="feature-text">
-                  <strong>Thanh toán nhanh chóng</strong>
+                  <strong>Rút tiền nhanh chóng</strong>
                   <p>Giao dịch tức thì, mọi lúc, mọi nơi chỉ với vài giây</p>
                 </div>
               </div>
@@ -95,8 +95,8 @@ const Login = () => {
                   <i className="fas fa-gift"></i>
                 </div>
                 <div className="feature-text">
-                  <strong>Ưu đãi mỗi ngày</strong>
-                  <p>Hàng ngàn ưu đãi hấp dẫn dành riêng cho bạn</p>
+                  <strong>Trả sau tiện lợi</strong>
+                  <p>Thanh toán linh hoạt, hưởng ngay ưu đãi hấp dẫn</p>
                 </div>
               </div>
             </div>
@@ -124,7 +124,7 @@ const Login = () => {
                   <input 
                     type="text" 
                     name="username" 
-                    placeholder="Số điện thoại hoặc email"
+                    placeholder="Tên đăng nhập"
                     value={formData.username} 
                     onChange={handleChange} 
                     required 
@@ -156,7 +156,6 @@ const Login = () => {
 
               <button type="submit" className="auth-btn-new" disabled={loading}>
                 {loading ? 'Đang xử lý...' : 'Đăng nhập'}
-                {!loading && <i className="fas fa-arrow-right"></i>}
               </button>
 
               <div className="divider-new">
@@ -188,10 +187,7 @@ const Login = () => {
           </div>
         </div>
       </div>
-      
-      <div className="login-footer-copyright">
-        © 2024 MoMo. Tất cả quyền được bảo lưu.
-      </div>
+    
     </div>
   );
 };

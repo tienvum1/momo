@@ -22,7 +22,7 @@ body {
   width: 100%;
   padding: 24px 40px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   max-width: 1440px;
   margin: 0 auto;
@@ -421,13 +421,13 @@ body {
     margin-top: 20px;
     margin-bottom: 40px;
   }
-  
+
   .right-section {
     flex: 0 0 auto;
     width: 100%;
     max-width: 420px;
   }
-  
+
   .left-section {
     width: 100%;
     max-width: 420px;
@@ -440,7 +440,7 @@ body {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .login-content {
     padding: 20px;
   }
@@ -561,7 +561,7 @@ body {
             background: white;
             box-shadow: 0 0 0 3px rgba(216, 45, 139, 0.15);
 
-            & + i {
+            &+i {
               color: #d82d8b;
             }
           }
@@ -647,7 +647,7 @@ body {
     .social-login {
       margin-bottom: 20px;
 
-      & > div {
+      &>div {
         display: flex;
         justify-content: center;
       }
@@ -662,7 +662,8 @@ body {
       align-items: center;
       gap: 10px;
 
-      span, p {
+      span,
+      p {
         color: #666;
         font-size: 14px;
         margin: 0;
