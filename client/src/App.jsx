@@ -3,12 +3,10 @@ import { useLocation, BrowserRouter as Router, Routes, Route, Navigate } from 'r
 import api from './api/axios';
 import Login from './pages/Auth/Login/Login';
 import Register from './pages/Auth/Register/Register';
-import VerifyEmail from './pages/Auth/VerifyEmail/VerifyEmail';
-import ForgotPassword from './pages/Auth/ForgotPassword/ForgotPassword';
-import ResetPassword from './pages/Auth/ResetPassword/ResetPassword';
 import AdminUserManager from './pages/Admin/UserManager/UserManager';
 import AdminBookingManager from './pages/Admin/BookingManager/AdminBookingManager';
 import AdminBookingDetail from './pages/Admin/BookingDetail/AdminBookingDetail';
+import AdminQRManager from './pages/Admin/QRManager/AdminQRManager';
 import AdminLayout from './components/AdminLayout/AdminLayout';
 import MyBookings from './pages/MyBookings/MyBookings';
 import MyBookingDetail from './pages/MyBookings/MyBookingDetail';
@@ -93,9 +91,6 @@ function App() {
           />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route
             path="/my-bookings"
             element={<AuthRoute user={user}><MyBookings /></AuthRoute>}
@@ -117,6 +112,7 @@ function App() {
             <Route path="users" element={<AdminUserManager />} />
             <Route path="bookings" element={<AdminBookingManager />} />
             <Route path="bookings/:id" element={<AdminBookingDetail />} />
+            <Route path="qrs" element={<AdminQRManager />} />
           </Route>
 
           {/* Fallback */}

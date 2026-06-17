@@ -1,4 +1,4 @@
-const pool = require("../config/db").pool;
+const prisma = require("../config/prisma");
 
 const getRevenueStats = async (req, res) => {
   try {
@@ -54,8 +54,28 @@ const getRevenueStats = async (req, res) => {
       SUM(CASE WHEN b.status IN ('created','customer_paid') THEN 1 ELSE 0 END) as processing_count
     `;
 
+    // Helper function to safely serialize BigInt and Decimal (from Prisma) for Express JSON
+    const serializeBigIntAndDecimal = (obj) => {
+      if (obj === null || obj === undefined) return obj;
+      if (typeof obj === 'bigint') return Number(obj);
+      if (typeof obj === 'object') {
+        if (obj.constructor && obj.constructor.name === 'Decimal') {
+          return Number(obj.toString());
+        }
+        if (Array.isArray(obj)) {
+          return obj.map(serializeBigIntAndDecimal);
+        }
+        const newObj = {};
+        for (const key of Object.keys(obj)) {
+          newObj[key] = serializeBigIntAndDecimal(obj[key]);
+        }
+        return newObj;
+      }
+      return obj;
+    };
+
     // Summary — kỳ hiện tại
-    const [summaryRows] = await pool.query(
+    const summaryRows = await prisma.$queryRawUnsafe(
       `SELECT
         SUM(CASE WHEN ${completedStatus} THEN b.transfer_amount ELSE 0 END) as total_amount,
         SUM(CASE WHEN ${completedStatus} THEN b.fee_amount ELSE 0 END) as total_fee,
@@ -66,35 +86,35 @@ const getRevenueStats = async (req, res) => {
     const summary = summaryRows[0] || { total_amount: 0, total_fee: 0, completed_count: 0 };
 
     // Theo thời gian
-    const [byTime] = await pool.query(
+    const byTime = await prisma.$queryRawUnsafe(
       `SELECT DATE_FORMAT(CONVERT_TZ(b.created_at,'+00:00','+07:00'),?) as label, ${financeFields}
        FROM bookings b WHERE ${periodFilter} GROUP BY label ORDER BY label DESC`,
-      [dateFormat]
+      dateFormat
     );
 
     // Theo QR
-    const [byQr] = await pool.query(
+    const byQr = await prisma.$queryRawUnsafe(
       `SELECT DATE_FORMAT(CONVERT_TZ(b.created_at,'+00:00','+07:00'),?) as label,
               b.qr_id, q.name as qr_name, ${financeFields}
        FROM bookings b JOIN qrs q ON q.id = b.qr_id
        WHERE ${periodFilter} GROUP BY label, b.qr_id, q.name ORDER BY label DESC, total_amount DESC`,
-      [dateFormat]
+      dateFormat
     );
 
     // Theo khách hàng
-    const [byCustomer] = await pool.query(
+    const byCustomer = await prisma.$queryRawUnsafe(
       `SELECT DATE_FORMAT(CONVERT_TZ(b.created_at,'+00:00','+07:00'),?) as label,
               u.id as customer_id, u.full_name as customer_name, u.email as customer_email, ${financeFields}
        FROM bookings b JOIN users u ON u.id = b.customer_id
        WHERE ${periodFilter} GROUP BY label, u.id ORDER BY label DESC, total_amount DESC`,
-      [dateFormat]
+      dateFormat
     );
 
     res.json({
-      summary,
-      byTime,
-      byQr,
-      byCustomer,
+      summary: serializeBigIntAndDecimal(summary),
+      byTime: serializeBigIntAndDecimal(byTime),
+      byQr: serializeBigIntAndDecimal(byQr),
+      byCustomer: serializeBigIntAndDecimal(byCustomer),
     });
   } catch (err) {
     console.error("Lỗi getRevenueStats:", err);

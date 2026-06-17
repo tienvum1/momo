@@ -1,38 +1,24 @@
 .home-container {
   width: 100%;
   margin: 0;
-  padding: 20px 16px;
+  padding: 0;
 
   .hero-section {
-    text-align: center;
     margin-bottom: 30px;
-    padding: 40px 20px;
-    background: #fdf2f8;
     border-radius: 20px;
-    position: relative;
     overflow: hidden;
 
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 700px;
-      margin: 0 auto;
-
-      h1 {
-        font-size: 24px;
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 8px;
-        line-height: 1.2;
-
-        .brand-accent {
-          color: #d82d8b;
-        }
-      }
+    .hero-banner {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: cover;
     }
   }
 
   .qr-showcase {
+    padding: 20px 16px;
+
     h2 {
       font-size: 18px;
       color: #333;
@@ -97,94 +83,184 @@
 
     .qr-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 20px;
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+      }
     }
 
+    // ── Card QR ──────────────────────────────────────────────
     .qr-card {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       overflow: hidden;
-      transition: all 0.3s ease;
       display: flex;
       flex-direction: column;
+      transition: transform 0.25s, box-shadow 0.25s;
 
       &:hover {
         transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 12px 32px rgba(216, 45, 139, 0.15);
       }
 
-      .qr-image-wrapper {
-        height: 200px;
-        background: #fafafa;
-        padding: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      // Ảnh full width, không padding
+      .qr-card-image {
+        width: 100%;
+        overflow: hidden;
+        background: #f8f0f5;
 
         img {
-          max-width: 100%;
-          max-height: 100%;
+          width: 100%;
+          height: auto;
+          display: block;
           object-fit: contain;
         }
       }
 
-      .qr-details {
-        padding: 20px;
-        flex-grow: 1;
+      // Body bên dưới ảnh
+      .qr-card-body {
+        padding: 16px;
         display: flex;
         flex-direction: column;
+        gap: 14px;
+        flex: 1;
+      }
 
-        .qr-header {
+      // Tên QR căn giữa, đậm
+      .qr-card-name {
+        text-align: center;
+        font-size: 18px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+
+      // Hàng 2 info box
+      .qr-card-info-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      // Mỗi info box (phí / hạn mức)
+      .qr-info-box {
+        background: #fff5f9;
+        border: 1.5px solid #f9d0e7;
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+        .qr-info-box-header {
           display: flex;
-          justify-content: space-between;
           align-items: center;
-          margin-bottom: 12px;
+          gap: 8px;
+          padding-bottom: 10px;
+          border-bottom: 1.5px solid #f9d0e7;
 
-          .qr-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: #333;
-            margin: 0;
+          .qr-info-box-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: #d82d8b;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
           }
 
-          .qr-fee {
-            background: #fdf2f8;
+          .qr-info-box-title {
+            font-size: 11px;
+            font-weight: 800;
             color: #d82d8b;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
           }
         }
 
-        .qr-limit {
-          font-size: 14px;
-          color: #666;
-          margin-bottom: 16px;
-          line-height: 1.5;
+        .qr-info-box-content {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+      }
+
+      // Dòng phí
+      .fee-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 4px;
+
+        .fee-line-label {
+          font-size: 11px;
+          color: #64748b;
+          font-weight: 500;
+          flex: 1;
         }
 
-        .use-now-btn {
-          display: block;
-          margin-top: auto;
-          background: #d82d8b;
-          color: white;
-          border: none;
-          padding: 12px;
-          border-radius: 12px;
-          font-weight: 700;
-          text-decoration: none;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.3s;
-          font-size: 14px;
+        .fee-line-value {
+          font-size: 18px;
+          font-weight: 800;
+          color: #d82d8b;
+          white-space: nowrap;
+        }
+      }
 
-          &:hover {
-            background: #c6287f;
-          }
+      // Block hạn mức (label trên, value dưới lớn)
+      .limit-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .limit-block-label {
+          font-size: 11px;
+          color: #64748b;
+          font-weight: 500;
+        }
+
+        .limit-block-value {
+          font-size: 17px;
+          font-weight: 800;
+          color: #d82d8b;
+          line-height: 1.2;
+          word-break: break-all;
+        }
+      }
+
+      // Nút TẠO ĐƠN
+      .qr-card-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: auto;
+        background: linear-gradient(135deg, #e83e9a 0%, #d82d8b 100%);
+        color: #fff;
+        text-decoration: none;
+        padding: 15px;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        box-shadow: 0 6px 18px rgba(216, 45, 139, 0.35);
+        transition: all 0.25s;
+
+        &:hover {
+          background: linear-gradient(135deg, #d82d8b 0%, #c6287f 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 8px 22px rgba(216, 45, 139, 0.45);
+        }
+
+        &:active {
+          transform: translateY(0);
         }
       }
     }

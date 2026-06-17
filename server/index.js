@@ -3,9 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
-const db = require('./config/db');
-const pool = db.pool;
-const initDB = db.initDB;
+const prisma = require('./config/prisma');
 const authRoutes = require('./routes/authRoutes');
 const qrRoutes = require('./routes/qrRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
@@ -37,8 +35,7 @@ app.use('/api/', limiter);
 
 app.set('trust proxy', 1);
 
-// Khởi tạo Database
-initDB();
+// Database được khởi tạo qua Prisma Client
 
 // Tạo thư mục uploads nếu chưa có
 const uploadDir = path.join(__dirname, 'uploads');
@@ -81,14 +78,21 @@ app.use('/api/admin', adminRoutes);
 // Tự động hủy đơn hàng sau 30 phút nếu chưa thanh toán
 const autoCancelBookings = async () => {
   try {
-    const [result] = await pool.query(`
-      UPDATE bookings 
-      SET status = 'cancelled', reject_note = 'Quá hạn thanh toán' 
-      WHERE status = 'created' 
-      AND created_at < UTC_TIMESTAMP() - INTERVAL 30 MINUTE
-    `);
-    if (result.affectedRows > 0) {
-      console.log(`[${new Date().toISOString()}] Đã tự động hủy ${result.affectedRows} đơn hàng quá hạn 30 phút.`);
+    const timeLimit = new Date(Date.now() - 30 * 60 * 1000);
+    const result = await prisma.booking.updateMany({
+      where: {
+        status: 'created',
+        created_at: {
+          lt: timeLimit,
+        },
+      },
+      data: {
+        status: 'cancelled',
+        reject_note: 'Quá hạn thanh toán',
+      },
+    });
+    if (result.count > 0) {
+      console.log(`[${new Date().toISOString()}] Đã tự động hủy ${result.count} đơn hàng quá hạn 30 phút.`);
     }
   } catch (err) {
     console.error(`[${new Date().toISOString()}] Lỗi khi tự động hủy đơn hàng:`, err.message);
@@ -100,9 +104,7 @@ autoCancelBookings();
 
 app.get('/api/db-check', async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    await connection.query('SELECT 1');
-    connection.release();
+    await prisma.$queryRaw`SELECT 1`;
     res.json({ status: 'success', message: 'Kết nối Database thành công!' });
   } catch (err) {
     console.error('Lỗi kết nối DB:', err);

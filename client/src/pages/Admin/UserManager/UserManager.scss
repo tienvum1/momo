@@ -437,11 +437,7 @@
       }
     }
 
-    .role-level-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+
 
     .role-badge {
       display: inline-flex;
@@ -472,33 +468,7 @@
       }
     }
 
-    .level-badge {
-      display: inline-flex;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 700;
 
-      &.level-0 {
-        background: #f1f5f9;
-        color: #64748b;
-      }
-
-      &.level-1 {
-        background: #e0f2fe;
-        color: #0369a1;
-      }
-
-      &.level-2 {
-        background: #fef3c7;
-        color: #b45309;
-      }
-
-      &.level-3 {
-        background: #fae8ff;
-        color: #86198f;
-      }
-    }
 
     .status-badge {
       display: inline-flex;

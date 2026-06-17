@@ -806,3 +806,114 @@
   margin-bottom: 6px;
   display: block;
 }
+
+// ── QR stat cards (phí + hạn mức) ────────────────────────────────────────────
+.qr-info-cards-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.qr-stat-card {
+  background: #fff;
+  border: 1px solid #f0d6e8;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  .qr-stat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #fce7f3;
+
+    .qr-stat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      &.fee-icon {
+        background: #d82d8b;
+        color: #fff;
+      }
+
+      &.limit-icon {
+        background: #d82d8b;
+        color: #fff;
+      }
+    }
+
+    .qr-stat-card-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #d82d8b;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+  }
+
+  .qr-stat-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+.fee-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+
+  .fee-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .fee-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: #d82d8b;
+  }
+}
+
+.fee-divider {
+  height: 1px;
+  background: #fce7f3;
+}
+
+.limit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .limit-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .limit-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #d82d8b;
+  }
+}

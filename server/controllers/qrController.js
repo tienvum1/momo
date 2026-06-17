@@ -1,4 +1,4 @@
-const pool = require('../config/db').pool;
+const prisma = require('../config/prisma');
 const { cloudinary } = require('../config/cloudinary');
 
 // Hàm helper để xóa ảnh trên Cloudinary từ URL
@@ -17,7 +17,7 @@ const deleteCloudinaryImage = async (url) => {
 // Tạo mới một QR
 const createQR = async (req, res) => {
   try {
-    const { name, max_amount_per_trans, daily_limit, fee_rate, note, status } = req.body;
+    const { name, max_amount_per_trans, monthly_limit, fee_rate, fee_rate_under, fee_rate_over, note, status } = req.body;
     const creator_id = req.user.id;
 
     const main_image = req.files && req.files.main_image ? req.files.main_image[0].path : '';
@@ -29,29 +29,25 @@ const createQR = async (req, res) => {
 
     const qrStatus = status || 'ready';
 
-    const [result] = await pool.query(
-      'INSERT INTO qrs (name, main_image, qr_image, max_amount_per_trans, daily_limit, fee_rate, note, status, creator_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [
-        name || null, main_image, qr_image,
-        max_amount_per_trans, daily_limit || null,
-        fee_rate || 0, note, qrStatus, creator_id
-      ]
-    );
-
-    res.status(201).json({
-      message: 'Tạo QR thành công',
-      qr: {
-        id: result.insertId,
+    const qr = await prisma.qr.create({
+      data: {
         name: name || null,
         main_image,
         qr_image,
-        max_amount_per_trans,
-        daily_limit: daily_limit || null,
-        fee_rate,
-        note,
+        max_amount_per_trans: Number(max_amount_per_trans),
+        monthly_limit: monthly_limit ? Number(monthly_limit) : null,
+        fee_rate: fee_rate !== undefined && fee_rate !== '' ? Number(fee_rate) : 0,
+        fee_rate_under: fee_rate_under !== undefined && fee_rate_under !== '' ? Number(fee_rate_under) : 0,
+        fee_rate_over: fee_rate_over !== undefined && fee_rate_over !== '' ? Number(fee_rate_over) : 0,
+        note: note || null,
         status: qrStatus,
-        creator_id
+        creator_id: creator_id,
       }
+    });
+
+    res.status(201).json({
+      message: 'Tạo QR thành công',
+      qr
     });
   } catch (err) {
     console.error('Lỗi khi tạo QR:', err);
@@ -62,37 +58,52 @@ const createQR = async (req, res) => {
 // Cập nhật QR
 const updateQR = async (req, res) => {
   try {
-    const { name, max_amount_per_trans, daily_limit, fee_rate, note, status } = req.body;
-    const qrId = req.params.id;
+    const { name, max_amount_per_trans, monthly_limit, fee_rate, fee_rate_under, fee_rate_over, note, status } = req.body;
+    const qrId = parseInt(req.params.id);
 
-    const [existing] = await pool.query('SELECT * FROM qrs WHERE id = ?', [qrId]);
-    if (existing.length === 0) return res.status(404).json({ message: 'Không tìm thấy QR' });
+    const existing = await prisma.qr.findUnique({
+      where: { id: qrId }
+    });
+    if (!existing) return res.status(404).json({ message: 'Không tìm thấy QR' });
 
-    let main_image = existing[0].main_image;
-    let qr_image = existing[0].qr_image;
+    let main_image = existing.main_image;
+    let qr_image = existing.qr_image;
 
     if (req.files) {
       if (req.files.main_image) {
-        await deleteCloudinaryImage(existing[0].main_image);
+        await deleteCloudinaryImage(existing.main_image);
         main_image = req.files.main_image[0].path;
       }
       if (req.files.qr_image) {
-        await deleteCloudinaryImage(existing[0].qr_image);
+        await deleteCloudinaryImage(existing.qr_image);
         qr_image = req.files.qr_image[0].path;
       }
     }
 
-    const updatedName = name !== undefined ? name : existing[0].name;
-    const updatedMaxAmount = max_amount_per_trans ?? existing[0].max_amount_per_trans;
-    const updatedDailyLimit = daily_limit !== undefined ? (daily_limit || null) : existing[0].daily_limit;
-    const updatedFeeRate = fee_rate ?? existing[0].fee_rate;
-    const updatedNote = note ?? existing[0].note;
-    const qrStatus = status || existing[0].status;
+    const updatedName = name !== undefined ? name : existing.name;
+    const updatedMaxAmount = max_amount_per_trans !== undefined ? Number(max_amount_per_trans) : existing.max_amount_per_trans;
+    const updatedMonthlyLimit = monthly_limit !== undefined ? (monthly_limit ? Number(monthly_limit) : null) : existing.monthly_limit;
+    const updatedFeeRate = fee_rate !== undefined ? Number(fee_rate) : existing.fee_rate;
+    const updatedFeeRateUnder = fee_rate_under !== undefined ? Number(fee_rate_under) : existing.fee_rate_under;
+    const updatedFeeRateOver = fee_rate_over !== undefined ? Number(fee_rate_over) : existing.fee_rate_over;
+    const updatedNote = note !== undefined ? note : existing.note;
+    const qrStatus = status || existing.status;
 
-    await pool.query(
-      'UPDATE qrs SET name = ?, main_image = ?, qr_image = ?, max_amount_per_trans = ?, daily_limit = ?, fee_rate = ?, note = ?, status = ? WHERE id = ?',
-      [updatedName, main_image, qr_image, updatedMaxAmount, updatedDailyLimit, updatedFeeRate, updatedNote, qrStatus, qrId]
-    );
+    await prisma.qr.update({
+      where: { id: qrId },
+      data: {
+        name: updatedName || null,
+        main_image,
+        qr_image,
+        max_amount_per_trans: updatedMaxAmount,
+        monthly_limit: updatedMonthlyLimit,
+        fee_rate: updatedFeeRate,
+        fee_rate_under: updatedFeeRateUnder,
+        fee_rate_over: updatedFeeRateOver,
+        note: updatedNote || null,
+        status: qrStatus
+      }
+    });
 
     res.json({ message: 'Cập nhật QR thành công' });
   } catch (err) {
@@ -104,12 +115,26 @@ const updateQR = async (req, res) => {
 // Lấy tất cả QR (cho admin) - Ưu tiên ready hiện đầu tiên
 const getAllQRs = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT q.*, u.full_name as creator_name 
-      FROM qrs q 
-      LEFT JOIN users u ON q.creator_id = u.id 
-      ORDER BY (CASE WHEN q.status = 'ready' THEN 1 ELSE 2 END) ASC, q.created_at DESC
-    `);
+    const qrs = await prisma.qr.findMany({
+      include: {
+        creator: {
+          select: { full_name: true }
+        }
+      }
+    });
+
+    const rows = qrs.map(q => ({
+      ...q,
+      creator_name: q.creator ? q.creator.full_name : null
+    }));
+
+    // Sort: status = 'ready' first, then maintenance. Within status, created_at desc.
+    rows.sort((a, b) => {
+      if (a.status === 'ready' && b.status !== 'ready') return -1;
+      if (a.status !== 'ready' && b.status === 'ready') return 1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -117,16 +142,39 @@ const getAllQRs = async (req, res) => {
   }
 };
 
+// Helper tính hạn mức còn lại trong tháng cho một QR
+const calcDailyRemaining = async (qrId, monthlyLimit) => {
+  if (!monthlyLimit) return null;
+  const limit = Number(monthlyLimit);
+  if (!limit || limit <= 0) return null;
+
+  const rows = await prisma.$queryRaw`
+    SELECT COALESCE(SUM(transfer_amount), 0) as used
+    FROM bookings
+    WHERE qr_id = ${qrId}
+      AND status IN ('customer_paid', 'confirmed')
+      AND MONTH(CONVERT_TZ(created_at,'+00:00','+07:00')) = MONTH(CONVERT_TZ(NOW(),'+00:00','+07:00'))
+      AND YEAR(CONVERT_TZ(created_at,'+00:00','+07:00')) = YEAR(CONVERT_TZ(NOW(),'+00:00','+07:00'))
+  `;
+  const used = Number(rows[0]?.used ?? 0);
+  return Math.max(0, limit - used);
+};
+
 // Lấy danh sách QR sẵn sàng cho người dùng
 const getReadyQRs = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT q.*, u.full_name as creator_name 
-      FROM qrs q 
-      JOIN users u ON q.creator_id = u.id 
-      WHERE q.status = 'ready'
-      ORDER BY q.created_at DESC
-    `);
+    const qrs = await prisma.qr.findMany({
+      where: { status: 'ready' },
+      include: { creator: { select: { full_name: true } } },
+      orderBy: { created_at: 'desc' }
+    });
+
+    const rows = await Promise.all(qrs.map(async (q) => ({
+      ...q,
+      creator_name: q.creator ? q.creator.full_name : null,
+      daily_remaining: await calcDailyRemaining(q.id, q.monthly_limit),
+    })));
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -137,16 +185,20 @@ const getReadyQRs = async (req, res) => {
 // Lấy chi tiết QR sẵn sàng cho người dùng
 const getReadyQRById = async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT q.*, u.full_name as creator_name
-       FROM qrs q
-       JOIN users u ON q.creator_id = u.id
-       WHERE q.id = ? AND q.status = 'ready'
-       LIMIT 1`,
-      [req.params.id]
-    );
-    if (rows.length === 0) return res.status(404).json({ message: 'Không tìm thấy QR' });
-    res.json(rows[0]);
+    const qr = await prisma.qr.findFirst({
+      where: { id: parseInt(req.params.id), status: 'ready' },
+      include: { creator: { select: { full_name: true } } }
+    });
+
+    if (!qr) return res.status(404).json({ message: 'Không tìm thấy QR' });
+
+    const daily_remaining = await calcDailyRemaining(qr.id, qr.monthly_limit);
+
+    res.json({
+      ...qr,
+      creator_name: qr.creator ? qr.creator.full_name : null,
+      daily_remaining,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Lỗi server khi lấy chi tiết QR' });
@@ -156,17 +208,24 @@ const getReadyQRById = async (req, res) => {
 // Cập nhật trạng thái QR (admin)
 const updateQRStatus = async (req, res) => {
   try {
-    const qrId = req.params.id;
+    const qrId = parseInt(req.params.id);
     const { status } = req.body;
 
     if (status !== 'ready' && status !== 'maintenance') {
       return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
     }
 
-    const [existing] = await pool.query('SELECT id FROM qrs WHERE id = ?', [qrId]);
-    if (existing.length === 0) return res.status(404).json({ message: 'Không tìm thấy QR' });
+    const existing = await prisma.qr.findUnique({
+      where: { id: qrId },
+      select: { id: true }
+    });
+    if (!existing) return res.status(404).json({ message: 'Không tìm thấy QR' });
 
-    await pool.query('UPDATE qrs SET status = ? WHERE id = ?', [status, qrId]);
+    await prisma.qr.update({
+      where: { id: qrId },
+      data: { status }
+    });
+
     res.json({ message: 'Cập nhật trạng thái thành công' });
   } catch (err) {
     console.error(err);
@@ -177,19 +236,20 @@ const updateQRStatus = async (req, res) => {
 // Xóa QR
 const deleteQR = async (req, res) => {
   try {
-    const qrId = req.params.id;
+    const qrId = parseInt(req.params.id);
 
-    const [existing] = await pool.query('SELECT main_image, qr_image FROM qrs WHERE id = ?', [qrId]);
-    if (existing.length === 0) return res.status(404).json({ message: 'Không tìm thấy QR' });
+    const existing = await prisma.qr.findUnique({
+      where: { id: qrId },
+      select: { main_image: true, qr_image: true }
+    });
+    if (!existing) return res.status(404).json({ message: 'Không tìm thấy QR' });
 
-    await deleteCloudinaryImage(existing[0].main_image);
-    await deleteCloudinaryImage(existing[0].qr_image);
+    await deleteCloudinaryImage(existing.main_image);
+    await deleteCloudinaryImage(existing.qr_image);
 
-    const [result] = await pool.query('DELETE FROM qrs WHERE id = ?', [qrId]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy QR để xóa' });
-    }
+    await prisma.qr.delete({
+      where: { id: qrId }
+    });
 
     res.json({ message: 'Xóa QR thành công' });
   } catch (err) {
@@ -201,9 +261,11 @@ const deleteQR = async (req, res) => {
 // Lấy chi tiết 1 QR
 const getQRById = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM qrs WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) return res.status(404).json({ message: 'Không tìm thấy QR' });
-    res.json(rows[0]);
+    const qr = await prisma.qr.findUnique({
+      where: { id: parseInt(req.params.id) }
+    });
+    if (!qr) return res.status(404).json({ message: 'Không tìm thấy QR' });
+    res.json(qr);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Lỗi server' });

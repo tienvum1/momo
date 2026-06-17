@@ -35,7 +35,7 @@ const UserManager = () => {
 
   const [formData, setFormData] = useState({
     email: '', password: '', full_name: '',
-    role: 'user', level: 0, status: 'active'
+    role: 'user', status: 'active'
   });
 
   const fetchUsers = useCallback(async () => {
@@ -64,11 +64,11 @@ const UserManager = () => {
       setFormData({
         email: user.email, password: '',
         full_name: user.full_name, role: user.role,
-        level: user.level ?? 0, status: user.status
+        status: user.status
       });
     } else {
       setEditingUser(null);
-      setFormData({ email: '', password: '', full_name: '', role: 'user', level: 0, status: 'active' });
+      setFormData({ email: '', password: '', full_name: '', role: 'user', status: 'active' });
     }
     setIsModalOpen(true);
   };
@@ -224,9 +224,6 @@ const UserManager = () => {
                     <div className="user-info-cell">
                       <div className="details">
                         <div className="name">{ROLE_LABELS[user.role] || user.role}</div>
-                        {user.role === 'user' && (
-                          <div className="role-small">{user.level === 0 ? 'Mặc định' : `Cấp ${user.level}`}</div>
-                        )}
                       </div>
                     </div>
                   </td>
@@ -312,15 +309,6 @@ const UserManager = () => {
                   <select value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
                     <option value="user">Khách hàng</option>
                     <option value="admin_system">Admin Hệ thống</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Cấp độ người dùng</label>
-                  <select value={formData.level} onChange={e => setFormData({ ...formData, level: Number(e.target.value) })}>
-                    <option value={0}>Cấp 0 (Mặc định)</option>
-                    <option value={1}>Cấp 1</option>
-                    <option value={2}>Cấp 2</option>
-                    <option value={3}>Cấp 3</option>
                   </select>
                 </div>
                 <div className="form-group">

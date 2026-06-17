@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { toast } from 'react-toastify';
 import {
-  User, Edit3, Check, X, Shield, Star,
+  User, Edit3, Check, X, Shield,
   LogOut, Lock, ChevronLeft, Eye, EyeOff
 } from 'lucide-react';
 import './Profile.scss';
@@ -115,10 +115,6 @@ const Profile = () => {
                 <span className={`badge-role ${user.role}`}>
                   <Shield size={12} style={{ marginRight: 4 }} />
                   {getRoleLabel(user.role)}
-                </span>
-                <span className="badge-level">
-                  <Star size={12} style={{ marginRight: 4 }} />
-                  {user.level === 0 ? 'Cấp mặc định' : `Cấp ${user.level}`}
                 </span>
               </div>
             </div>
