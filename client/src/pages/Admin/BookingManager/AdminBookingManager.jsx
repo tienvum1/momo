@@ -1,26 +1,55 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Search, Trash2
-} from 'lucide-react';
+import { Search, Trash2 } from 'lucide-react';
 import api from '../../../api/axios';
 import { toast } from 'react-hot-toast';
 import './AdminBookingManager.scss';
+
+const formatMoney = (value) => {
+  const n = Math.round(Number(value));
+  if (Number.isNaN(n)) return '—';
+  return n.toLocaleString('vi-VN');
+};
+
+const formatDateTime = (value) => {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+};
+
+const statusLabel = (status) => {
+  const map = {
+    created: 'Chờ thanh toán',
+    customer_paid: 'Đang xử lý',
+    confirmed: 'Hoàn thành',
+    rejected: 'Từ chối',
+    cancelled: 'Đã hủy',
+  };
+  return map[status] || status;
+};
+
+const shortCode = (code) => String(code || '').slice(-6);
+
+const DATE_OPTIONS = [
+  { label: 'Tất cả thời gian', value: 'all' },
+  { label: 'Hôm nay', value: 'today' },
+  { label: '7 ngày qua', value: '7days' },
+  { label: '30 ngày qua', value: '30days' },
+  { label: 'Tháng này', value: 'thisMonth' },
+];
 
 const AdminBookingManager = () => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [stats, setStats] = useState({
-    total: 0, pending_claim: 0, processing: 0,
+    total: 0, pending: 0, processing: 0,
     completed: 0, rejected: 0, cancelled: 0,
-    total_revenue: 0, total_fee: 0, total_base_fee: 0, total_profit: 0
+    total_revenue: 0, total_fee: 0,
   });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [validFilter, setValidFilter] = useState('all');
-  const [processingFilter, setProcessingFilter] = useState('all');
-  const [accountantFilter, setAccountantFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('thisMonth');
   const [qrNameFilter, setQrNameFilter] = useState('');
   const [qrList, setQrList] = useState([]);
@@ -28,26 +57,7 @@ const AdminBookingManager = () => {
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 20;
 
-  const [confirmModal, setConfirmModal] = useState({ isOpen: false, bookingId: null, shortCode: '' });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, bookingId: null, shortCode: '' });
-
-  const dateOptions = [
-    { label: 'Tất cả thời gian', value: 'all' },
-    { label: 'Hôm nay', value: 'today' },
-    { label: '7 ngày qua', value: '7days' },
-    { label: '30 ngày qua', value: '30days' },
-    { label: 'Tháng này', value: 'thisMonth' },
-  ];
-
-  const filterParams = useCallback(() => ({
-    status: statusFilter === 'all' ? undefined : statusFilter,
-    processing_status: processingFilter === 'all' ? undefined : processingFilter,
-    is_valid: validFilter === 'all' ? undefined : validFilter,
-    accountant_status: accountantFilter === 'all' ? undefined : accountantFilter,
-    search: searchTerm.trim() || undefined,
-    qrName: qrNameFilter.trim() || undefined,
-    dateRange: dateFilter === 'all' ? undefined : dateFilter,
-  }), [statusFilter, processingFilter, validFilter, accountantFilter, searchTerm, qrNameFilter, dateFilter]);
 
   useEffect(() => {
     api.get('/qrs').then(res => {
@@ -56,87 +66,42 @@ const AdminBookingManager = () => {
     }).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      setLoading(true);
-      const params = filterParams();
-      try {
-        const [bookingsRes, statsRes] = await Promise.all([
-          api.get('/bookings/staff', { params: { ...params, page: currentPage, limit: itemsPerPage } }),
-          api.get('/bookings/staff/stats', { params })
-        ]);
-        if (!active) return;
-        setBookings(Array.isArray(bookingsRes.data.data) ? bookingsRes.data.data : []);
-        setTotalPages(bookingsRes.data.totalPages || 0);
-        setStats(statsRes.data);
-      } catch (err) {
-        console.error('Lỗi tải dữ liệu:', err);
-        if (active) { setBookings([]); }
-      } finally {
-        if (active) setLoading(false);
-      }
+  const load = useCallback(async () => {
+    setLoading(true);
+    const params = {
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      search: searchTerm.trim() || undefined,
+      qrName: qrNameFilter.trim() || undefined,
+      dateRange: dateFilter === 'all' ? undefined : dateFilter,
+      page: currentPage,
+      limit: itemsPerPage,
     };
-    load();
-    return () => { active = false; };
-  }, [currentPage, statusFilter, processingFilter, validFilter, accountantFilter, searchTerm, qrNameFilter, dateFilter]);
+    try {
+      const res = await api.get('/bookings/admin/list', { params });
+      setBookings(Array.isArray(res.data.data) ? res.data.data : []);
+      setTotalPages(res.data.totalPages || 0);
+      setStats(res.data.stats || {});
+    } catch (err) {
+      console.error('Lỗi tải dữ liệu:', err);
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, statusFilter, searchTerm, qrNameFilter, dateFilter]);
 
-  // Reset page khi filter thay đổi
+  useEffect(() => { load(); }, [load]);
+
   const handleFilterChange = (setter) => (e) => {
     setter(e.target.value);
     setCurrentPage(1);
   };
 
-  const formatMoney = (value) => {
-    const n = Math.round(Number(value));
-    if (Number.isNaN(n)) return '—';
-    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') ;
-  };
-
-  const formatDateTime = (value) => {
-    if (!value) return '—';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return '—';
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-  };
-
-  const statusLabel = (status) => {
-    if (status === 'created') return 'Mới tạo';
-    if (status === 'customer_paid') return 'Đang xử lý';
-    if (status === 'staff_confirmed' || status === 'completed' || status === 'accountant_paid') return 'Hoàn thành';
-    if (status === 'rejected') return 'Đã từ chối';
-    if (status === 'cancelled') return 'Đã hủy';
-    return status;
-  };
-
-  const shortCode = (code) => {
-    const raw = String(code || '');
-    return raw.length <= 6 ? raw : raw.slice(-6);
-  };
-
-  const handleClaim = async (id) => {
-    try {
-      await api.patch(`/bookings/${id}/claim`);
-      toast.success('Đã nhận xử lý đơn hàng');
-      setConfirmModal({ isOpen: false, bookingId: null, shortCode: '' });
-      navigate(`/admin/bookings/${id}`);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Lỗi khi nhận đơn');
-    }
-  };
-
   const handleDeleteBooking = async () => {
-    const id = deleteModal.bookingId;
     try {
-      await api.delete(`/admin/bookings/${id}`);
+      await api.delete(`/admin/bookings/${deleteModal.bookingId}`);
       toast.success('Đã xóa đơn hàng thành công');
       setDeleteModal({ isOpen: false, bookingId: null, shortCode: '' });
-      setCurrentPage(1);
+      load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Lỗi khi xóa đơn hàng');
     }
@@ -165,201 +130,101 @@ const AdminBookingManager = () => {
 
   return (
     <div className="admin-booking-page">
-
       {/* Stats */}
       <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Tổng đơn</span>
-            <span className="stat-value">{stats.total}</span>
+        {[
+          { label: 'Tổng đơn', value: stats.total },
+          { label: 'Chờ thanh toán', value: stats.pending },
+          { label: 'Đang xử lý', value: stats.processing },
+          { label: 'Hoàn thành', value: stats.completed },
+          { label: 'Từ chối', value: stats.rejected },
+          { label: 'Đã hủy', value: stats.cancelled },
+          { label: 'Doanh thu', value: `${formatMoney(stats.total_revenue)} đ` },
+          { label: 'Tổng phí', value: `${formatMoney(stats.total_fee)} đ` },
+        ].map(s => (
+          <div key={s.label} className="stat-card">
+            <div className="stat-info">
+              <span className="stat-label">{s.label}</span>
+              <span className="stat-value">{s.value ?? 0}</span>
+            </div>
           </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Mới tạo</span>
-            <span className="stat-value">{stats.pending_claim}</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Đang xử lý</span>
-            <span className="stat-value">{stats.processing}</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Hoàn thành</span>
-            <span className="stat-value">{stats.completed}</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Từ chối</span>
-            <span className="stat-value">{stats.rejected}</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Đã hủy</span>
-            <span className="stat-value">{stats.cancelled ?? 0}</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Tổng doanh thu</span>
-            <span className="stat-value">{formatMoney(stats.total_revenue)}</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Tổng phí khách chịu</span>
-            <span className="stat-value">{formatMoney(stats.total_fee)}</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Tổng phí gốc</span>
-            <span className="stat-value">{formatMoney(stats.total_base_fee)}</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Lợi nhuận</span>
-            <span className="stat-value">{formatMoney(stats.total_profit)}</span>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Toolbar */}
       <div className="booking-toolbar">
-        <div className="booking-title">
-          <h1>Quản lý đơn hàng </h1>
-        </div>
+        <div className="booking-title"><h1>Quản lý đơn hàng</h1></div>
         <div className="booking-controls">
           <div className="search-box">
             <Search size={16} />
             <input
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              placeholder="Mã đơn, tên khách..."
+              placeholder="Mã đơn, tên khách, email..."
             />
           </div>
           <select value={qrNameFilter} onChange={handleFilterChange(setQrNameFilter)}>
-            <option value="">Tất cả tên QR</option>
+            <option value="">Tất cả QR</option>
             {qrList.map(name => <option key={name} value={name}>{name}</option>)}
           </select>
           <select value={statusFilter} onChange={handleFilterChange(setStatusFilter)}>
             <option value="all">Tất cả trạng thái</option>
-            <option value="created">Mới tạo</option>
+            <option value="created">Chờ thanh toán</option>
             <option value="customer_paid">Đang xử lý</option>
-            <option value="staff_confirmed">Hoàn thành</option>
-            <option value="rejected">Đã từ chối</option>
+            <option value="confirmed">Hoàn thành</option>
+            <option value="rejected">Từ chối</option>
             <option value="cancelled">Đã hủy</option>
           </select>
-          <select value={processingFilter} onChange={handleFilterChange(setProcessingFilter)}>
-            <option value="all">Tất cả xử lý</option>
-            <option value="unclaimed">Chưa có ai nhận</option>
-            <option value="processing">Đang xử lý</option>
-            <option value="processed">Đã xử lý xong</option>
-          </select>
-          <select value={validFilter} onChange={handleFilterChange(setValidFilter)}>
-            <option value="all">Tất cả xác nhận</option>
-            <option value="yes">Hợp lệ</option>
-            <option value="no">Không hợp lệ</option>
-            <option value="null">Chưa xác nhận</option>
-          </select>
-          <select value={accountantFilter} onChange={handleFilterChange(setAccountantFilter)}>
-            <option value="all">Tất cả kế toán</option>
-            <option value="pending">Chờ thanh toán</option>
-            <option value="paid">Đã thanh toán</option>
-            <option value="rejected">Từ chối</option>
-          </select>
           <select value={dateFilter} onChange={handleFilterChange(setDateFilter)}>
-            {dateOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+            {DATE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
           </select>
         </div>
       </div>
 
-      {/* Desktop Table */}
-      <div className="table-shell desktop-only">
+      {/* Table */}
+      <div className="table-shell">
         <table className="booking-table">
           <thead>
             <tr>
               <th>ID</th>
               <th>Mã đơn</th>
-              <th>Tên QR</th>
+              <th>QR</th>
               <th>Khách hàng</th>
               <th>Tiền chuyển</th>
-              <th>Nhân viên</th>
-              <th>Kế toán</th>
+              <th>Phí</th>
               <th>Trạng thái</th>
               <th>Thời gian</th>
-              <th>Xác nhận</th>
               <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={11} className="empty">
-                <div className="loading-skeleton">
-                  {[...Array(5)].map((_, i) => <div key={i} className="skeleton-item" />)}
-                </div>
-              </td></tr>
+              <tr><td colSpan={9} className="empty">Đang tải...</td></tr>
             ) : bookings.length === 0 ? (
-              <tr><td colSpan={11} className="empty">Không có dữ liệu đơn hàng.</td></tr>
+              <tr><td colSpan={9} className="empty">Không có dữ liệu đơn hàng.</td></tr>
             ) : bookings.map((b) => (
               <tr key={b.id}>
-                <td data-label="ID">#{b.id}</td>
-                <td data-label="Mã đơn"><span className="mono">{shortCode(b.code)}</span></td>
-                <td data-label="Tên QR">{b.qr_name || '—'}</td>
-                <td data-label="Khách hàng">
+                <td>#{b.id}</td>
+                <td><span className="mono">{shortCode(b.code)}</span></td>
+                <td>{b.qr_name || '—'}</td>
+                <td>
                   <div className="customer-cell">
-                    <span className="name">{b.customer_name}</span>
-                    <span className="email">{b.customer_email}</span>
-                    <span className="phone">{b.customer_phone || 'Chưa cập nhật'}</span>
+                    <span className="name">{b.customer_name || '—'}</span>
+                    <span className="email">{b.customer_email || ''}</span>
                   </div>
                 </td>
-                <td data-label="Tiền chuyển">
-                  <span className="money-value">{formatMoney(b.transfer_amount)}</span>
-                </td>
-                <td data-label="Nhân viên">
-                  {b.staff_id
-                    ? <div className="staff-cell"><span>{b.staff_name || `ID: ${b.staff_id}`}</span></div>
-                    : <span className="no-staff">Chưa có</span>}
-                </td>
-                <td data-label="Kế toán">
-                  {b.accountant_status === 'paid'
-                    ? <span className="acc-status paid">Đã thanh toán</span>
-                    : b.accountant_status === 'pending'
-                      ? <span className="acc-status pending">Chờ thanh toán</span>
-                      : b.accountant_status === 'rejected'
-                        ? <span className="acc-status rejected">Từ chối</span>
-                        : <span className="no-accountant">—</span>}
-                </td>
-                <td data-label="Trạng thái">
-                  <span className={`status-text ${b.status}`}>{statusLabel(b.status)}</span>
-                </td>
-                <td data-label="Thời gian">
-                  <span>{formatDateTime(b.created_at)}</span>
-                </td>
-                <td data-label="Xác nhận">
-                  {b.is_valid === 'yes'
-                    ? <span style={{ color: '#15803d', fontWeight: 700 }}>✓ Có</span>
-                    : b.is_valid === 'no'
-                      ? <span style={{ color: '#dc2626', fontWeight: 700 }}>✗ Không</span>
-                      : <span style={{ color: '#cbd5e1' }}>—</span>}
-                </td>
+                <td><span className="money-value">{formatMoney(b.transfer_amount)} đ</span></td>
+                <td>{b.fee_rate}%</td>
+                <td><span className={`status-text ${b.status}`}>{statusLabel(b.status)}</span></td>
+                <td>{formatDateTime(b.created_at)}</td>
                 <td>
                   <div className="row-actions">
-                    {b.status === 'customer_paid' && !b.staff_id && (
-                      <button className="claim-btn" onClick={() => setConfirmModal({ isOpen: true, bookingId: b.id, shortCode: shortCode(b.code) })}>
-                        Xử lý
-                      </button>
-                    )}
-                    <button className="detail-view-btn" onClick={() => navigate(`/admin/bookings/${b.id}`)}>
-                      Chi tiết
-                    </button>
-                    <button className="delete-booking-btn" onClick={() => setDeleteModal({ isOpen: true, bookingId: b.id, shortCode: shortCode(b.code) })} title="Xóa đơn">
+                    <button className="detail-view-btn" onClick={() => navigate(`/admin/bookings/${b.id}`)}>Chi tiết</button>
+                    <button
+                      className="delete-booking-btn"
+                      onClick={() => setDeleteModal({ isOpen: true, bookingId: b.id, shortCode: shortCode(b.code) })}
+                      title="Xóa đơn"
+                    >
                       <Trash2 size={15} />
                     </button>
                   </div>
@@ -370,77 +235,7 @@ const AdminBookingManager = () => {
         </table>
       </div>
 
-      {/* Mobile Card List */}
-      <div className="booking-mobile-list mobile-only">
-        {loading ? (
-          <div className="loading-skeleton">
-            {[...Array(5)].map((_, i) => <div key={i} className="skeleton-item" />)}
-          </div>
-        ) : bookings.length === 0 ? (
-          <div className="empty">Không có dữ liệu đơn hàng.</div>
-        ) : (
-          bookings.map((b) => (
-            <div key={b.id} className="booking-mobile-card">
-              <div className="card-top">
-                <span className="date">{formatDateTime(b.created_at)}</span>
-                <span className="amount">{formatMoney(b.transfer_amount)} đ</span>
-              </div>
-              <div className="card-middle">
-                <div className="code-wrapper">
-                  <span className="code">{shortCode(b.code)}</span>
-                  <div className={`acc-status-text-mobile ${b.accountant_status === 'paid' ? 'paid' : 'unpaid'}`}>
-                    {b.accountant_status === 'paid' ? 'Kế toán đã thanh toán' : 'Kế toán chưa thanh toán'}
-                  </div>
-                </div>
-                <div className="validation-mobile">
-                  <span className="label">Xác nhận: </span>
-                  {b.is_valid === 'yes'
-                    ? <span className="valid-yes">✓ Có</span>
-                    : b.is_valid === 'no'
-                      ? <span className="valid-no">✗ Không</span>
-                      : <span className="valid-none">—</span>}
-                </div>
-              </div>
-              <div className="card-bottom">
-                {!(b.status === 'customer_paid' && !b.staff_id) && (
-                  <div className={`status-badge-mobile ${b.status}`}>
-                    {statusLabel(b.status)}
-                  </div>
-                )}
-                <div className="card-actions">
-                  {b.status === 'customer_paid' && !b.staff_id && (
-                    <button className="claim-btn-mobile" onClick={() => setConfirmModal({ isOpen: true, bookingId: b.id, shortCode: shortCode(b.code) })}>
-                      Xử lý
-                    </button>
-                  )}
-                  <button className="detail-btn-mobile" onClick={() => navigate(`/admin/bookings/${b.id}`)}>
-                    Chi tiết
-                  </button>
-                  <button className="delete-btn-mobile" onClick={() => setDeleteModal({ isOpen: true, bookingId: b.id, shortCode: shortCode(b.code) })} title="Xóa đơn">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
       {renderPagination()}
-
-      {/* Confirm claim modal */}
-      {confirmModal.isOpen && (
-        <div className="modal-overlay">
-          <div className="confirm-modal-content">
-            <h3>Xác nhận xử lý đơn</h3>
-            <p>Bạn có chắc chắn muốn nhận xử lý đơn hàng <strong>{confirmModal.shortCode}</strong> không?</p>
-            <div className="confirm-actions">
-              <button className="cancel-btn" onClick={() => setConfirmModal({ isOpen: false, bookingId: null, shortCode: '' })}>Hủy bỏ</button>
-              <button className="confirm-btn" onClick={() => handleClaim(confirmModal.bookingId)}>Xác nhận</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Delete modal */}
       {deleteModal.isOpen && (

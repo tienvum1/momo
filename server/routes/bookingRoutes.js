@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-
 const { protect } = require("../middleware/authMiddleware");
 const { authorize } = require("../middleware/roleMiddleware");
 const { storage } = require("../config/cloudinary");
@@ -10,53 +9,40 @@ const {
   submitCustomerPaid,
   getMyBookings,
   getMyBookingDetail,
-  staffGetBookings,
-  staffGetBookingDetail,
-  staffConfirmBooking,
-  staffRejectBooking,
-  getStaffStats,
-  claimBooking,
-  updateBookingValidity,
-  accountantGetBookings,
-  accountantGetBookingDetail,
-  accountantConfirmPaid,
+  adminGetBookings,
+  adminGetBookingDetail,
+  adminConfirmBooking,
+  adminRejectBooking,
+  getAdminStats,
 } = require("../controllers/bookingController");
 
-const upload = multer({ 
+const upload = multer({
   storage,
-  limits: { fileSize: 20 * 1024 * 1024 } // Tăng lên 20MB mỗi file để tránh lỗi trên điện thoại
+  limits: { fileSize: 20 * 1024 * 1024 },
 });
 
+// ─── Customer routes ──────────────────────────────────────────────────────────
 router.post("/", protect, createBooking);
 router.get("/my", protect, getMyBookings);
 router.get("/my/:id", protect, getMyBookingDetail);
 router.post(
   "/:id/customer-paid",
   protect,
-  upload.fields([
-    { name: 'proof', maxCount: 10 },
-    { name: 'id_card', maxCount: 2 }
-  ]),
+  upload.fields([{ name: "proof", maxCount: 10 }]),
   submitCustomerPaid
 );
 
-router.get("/staff", protect, authorize("staff", "admin_system"), staffGetBookings);
-router.get("/staff/stats", protect, authorize("staff", "admin_system"), getStaffStats);
-router.get("/staff/:id", protect, authorize("staff", "admin_system"), staffGetBookingDetail);
-router.patch("/:id/validity", protect, authorize("admin_system", "accountant"), updateBookingValidity);
-router.patch("/:id/claim", protect, authorize("staff", "admin_system"), claimBooking);
+// ─── Admin routes ─────────────────────────────────────────────────────────────
+router.get("/admin/list", protect, authorize("admin_system"), adminGetBookings);
+router.get("/admin/stats", protect, authorize("admin_system"), getAdminStats);
+router.get("/admin/:id", protect, authorize("admin_system"), adminGetBookingDetail);
 router.patch(
-  "/:id/confirm",
+  "/admin/:id/confirm",
   protect,
-  authorize("staff", "admin_system"),
+  authorize("admin_system"),
   upload.array("proof", 3),
-  staffConfirmBooking
+  adminConfirmBooking
 );
-router.patch("/:id/reject", protect, authorize("staff", "admin_system", "accountant"), staffRejectBooking);
-
-// Routes dành cho Kế toán
-router.get("/accountant/list", protect, authorize("accountant", "admin_system"), accountantGetBookings);
-router.get("/accountant/:id", protect, authorize("accountant", "admin_system"), accountantGetBookingDetail);
-router.post("/accountant/:id/confirm", protect, authorize("accountant"), upload.array("proof", 3), accountantConfirmPaid);
+router.patch("/admin/:id/reject", protect, authorize("admin_system"), adminRejectBooking);
 
 module.exports = router;

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User, LogOut, Menu, X, BarChart2, ShoppingCart,  LayoutDashboard } from 'lucide-react';
-import NotificationDropdown from './NotificationDropdown';
+import { User, LogOut, Menu, X, LayoutDashboard, ShoppingCart } from 'lucide-react';
 import './Header.scss';
 
 const Header = ({ user, handleLogout }) => {
@@ -10,10 +9,10 @@ const Header = ({ user, handleLogout }) => {
   return (
     <header className="main-header">
       <div className="header-container">
-        {/* Left: Hamburger (Mobile Only) & Logo */}
+        {/* Left */}
         <div className="header-left">
-          <button 
-            className="mobile-menu-btn" 
+          <button
+            className="mobile-menu-btn"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle Menu"
           >
@@ -21,35 +20,24 @@ const Header = ({ user, handleLogout }) => {
           </button>
 
           <Link to="/" className="logo-container" onClick={() => setIsMenuOpen(false)}>
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVW7rlSPHTehp-w35Km0QF380L2eZC-RuZmw&s" alt="Credify.vn Logo" className="logo-img" />
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVW7rlSPHTehp-w35Km0QF380L2eZC-RuZmw&s"
+              alt="Credify.vn Logo"
+              className="logo-img"
+            />
             <span className="brand-name">Credify</span>
           </Link>
-          
+
           <nav className={`header-nav ${isMenuOpen ? 'mobile-open' : ''}`}>
-            {user?.role === 'accountant' ? (
-              <>
-                <Link to="/accountant/bookings" className="nav-item" onClick={() => setIsMenuOpen(false)}>
-                  Quản lý thanh toán
-                </Link>
-                <Link to="/accountant/qrs" className="nav-item" onClick={() => setIsMenuOpen(false)}>
-                  Quản lý QR
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link to="/" className="nav-item" onClick={() => setIsMenuOpen(false)}>Trang chủ</Link>
-              </>
-            )}
+            <Link to="/" className="nav-item" onClick={() => setIsMenuOpen(false)}>Trang chủ</Link>
           </nav>
         </div>
 
-        {/* Right: Actions */}
+        {/* Right */}
         <div className="header-right">
           {user ? (
             <div className="user-actions">
-              <NotificationDropdown user={user} />
 
-              {/* User Avatar & Dropdown - ALWAYS VISIBLE */}
               <div className="user-profile">
                 <div className="avatar-wrapper">
                   {user.picture ? (
@@ -60,50 +48,34 @@ const Header = ({ user, handleLogout }) => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="user-dropdown">
                   <div className="dropdown-header">
                     <p className="user-name">{user.full_name}</p>
                     <p className="user-email">{user.email}</p>
-                    <span className="role-badge">{user.role}</span>
+                    <span className="role-badge">
+                      {user.role === 'admin_system' ? 'Admin' : 'Khách hàng'}
+                    </span>
                   </div>
                   <hr />
                   <Link to="/profile" className="dropdown-item">
                     <User size={16} /> Hồ sơ cá nhân
                   </Link>
-                  {user?.role === 'user' && (
+                  {user.role === 'user' && (
                     <Link to="/my-bookings" className="dropdown-item">
                       <ShoppingCart size={16} /> Đơn của tôi
                     </Link>
                   )}
-               
-                  {user?.role === 'admin_system' && (
+                  {user.role === 'admin_system' && (
                     <>
-                    <Link to="/admin/users" className="dropdown-item admin-portal-btn">
-                      <LayoutDashboard size={16} /> Quản lý hệ thống
-                    </Link>
-                     <Link to="/my-bookings" className="dropdown-item">
-                      <ShoppingCart size={16} /> Đơn của tôi
-                    </Link>
-                    </>
-                  )}
-                  {user?.role === 'staff' && (
-                    <>
-                      <Link to="/staff/bookings" className="dropdown-item">
-                        <ShoppingCart size={16} /> Quản lý đơn
-                      </Link>        
-                       <Link to="/staff/revenue" className="dropdown-item">
-                        <BarChart2 size={16} /> Báo cáo doanh thu
+                      <Link to="/admin/users" className="dropdown-item admin-portal-btn">
+                        <LayoutDashboard size={16} /> Quản lý hệ thống
+                      </Link>
+                      <Link to="/my-bookings" className="dropdown-item">
+                        <ShoppingCart size={16} /> Đơn của tôi
                       </Link>
                     </>
                   )}
-
-                  {/* <Link to="/settings" className="dropdown-item">
-                    <Settings size={16} /> Cài đặt
-                  </Link>
-                  <Link to="/help" className="dropdown-item">
-                    <HelpCircle size={16} /> Hỗ trợ
-                  </Link> */}
                   <hr />
                   <button onClick={handleLogout} className="dropdown-item logout-item">
                     <LogOut size={16} /> Đăng xuất
@@ -119,8 +91,7 @@ const Header = ({ user, handleLogout }) => {
           )}
         </div>
       </div>
-      
-      {/* Overlay for mobile menu */}
+
       {isMenuOpen && (
         <div className="mobile-overlay" onClick={() => setIsMenuOpen(false)}></div>
       )}

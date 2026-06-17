@@ -50,7 +50,6 @@ const Home = () => {
         <h2> QR đang sẵn sàng</h2>
         {!user ? (
           <div className="login-to-view">
-            <div className="lock-icon">🔒</div>
             <h3>Vui lòng đăng nhập</h3>
             <p>Bạn cần đăng nhập tài khoản để xem danh sách thẻ QR và sử dụng dịch vụ.</p>
             <Link to="/login" className="login-btn">Đăng nhập ngay</Link>

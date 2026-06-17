@@ -8,59 +8,10 @@ const { sendEmail } = require('../utils/sendEmail');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key';
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Test gửi email để debug trên Production
-const testEmail = async (req, res) => {
-  const targetEmail = req.query.email || process.env.RESEND_FROM_EMAIL || process.env.FROM_EMAIL;
-  
-  if (!targetEmail) {
-    return res.status(400).json({ 
-      status: 'error',
-      message: 'Vui lòng cung cấp email nhận (?email=...) hoặc cấu hình RESEND_FROM_EMAIL trong .env' 
-    });
-  }
-
-  try {
-    console.log(`--- Đang thực hiện gửi email test qua Resend tới: ${targetEmail} ---`);
-    const data = await sendEmail({
-      to: targetEmail,
-      subject: `[RESEND TEST] Kiểm tra hệ thống Email - ${new Date().toLocaleString('vi-VN')}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-          <h2 style="color: #4f46e5; text-align: center;">Hệ thống Resend hoạt động tốt!</h2>
-          <p>Chúc mừng! Bạn nhận được thư này có nghĩa là Resend đã được cấu hình chính xác.</p>
-          <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 5px 0;"><strong>Dịch vụ:</strong> Resend API</p>
-            <p style="margin: 5px 0;"><strong>Thời gian:</strong> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>
-            <p style="margin: 5px 0;"><strong>Sender:</strong> ${process.env.RESEND_FROM_EMAIL}</p>
-          </div>
-          <p style="color: #64748b; font-size: 14px;">Thư này được gửi từ API test-email. Nếu bạn không phải là người quản trị, vui lòng bỏ qua.</p>
-          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-          <p style="color: #94a3b8; font-size: 12px; text-align: center;">© 2024 Credify. All rights reserved.</p>
-        </div>
-      `,
-      text: `Hệ thống Resend hoạt động tốt! Bạn nhận được thư này có nghĩa là Resend đã được cấu hình chính xác.`
-    });
-
-    res.json({ 
-      status: 'success', 
-      message: `Đã gửi email kiểm tra tới ${targetEmail} thành công qua Resend!`, 
-      id: data?.id,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('❌ LỖI GỬI MAIL RESEND:', error);
-    res.status(500).json({ 
-      status: 'error', 
-      message: 'Gửi mail thất bại qua Resend', 
-      error: error.message
-    });
-  }
-};
-
 // Helper: tạo JWT và trả về trong response body
 const sendTokenResponse = (user, statusCode, res) => {
   const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
+    { id: user.id, username: user.username, role: user.role },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -70,54 +21,55 @@ const sendTokenResponse = (user, statusCode, res) => {
     token,
     user: {
       id: user.id,
+      username: user.username,
       email: user.email,
       full_name: user.full_name,
-      role: user.role
+      role: user.role,
+      level: user.level,
     }
   });
 };
 
-const register = async (req, res) => {
-  const { email, password, full_name } = req.body;
+// Test gửi email để debug trên Production
+const testEmail = async (req, res) => {
+  const targetEmail = req.query.email || process.env.RESEND_FROM_EMAIL || process.env.FROM_EMAIL;
+
+  if (!targetEmail) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Vui lòng cung cấp email nhận (?email=...) hoặc cấu hình RESEND_FROM_EMAIL trong .env'
+    });
+  }
+
   try {
-    const [existingUsers] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (existingUsers.length > 0) return res.status(400).json({ message: 'Email đã tồn tại' });
+    const data = await sendEmail({
+      to: targetEmail,
+      subject: `[RESEND TEST] Kiểm tra hệ thống Email - ${new Date().toLocaleString('vi-VN')}`,
+      html: `<p>Hệ thống email hoạt động tốt. Thời gian: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>`
+    });
+
+    res.json({ status: 'success', message: `Đã gửi email test tới ${targetEmail}`, id: data?.id });
+  } catch (error) {
+    console.error('LỖI GỬI MAIL:', error);
+    res.status(500).json({ status: 'error', message: 'Gửi mail thất bại', error: error.message });
+  }
+};
+
+const register = async (req, res) => {
+  const { username, password, full_name } = req.body;
+  try {
+    const [existingUsers] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
+    if (existingUsers.length > 0) return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại' });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Tạo mã xác nhận
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-
     await pool.query(
-      'INSERT INTO users (email, password, full_name, role, level, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [email, hashedPassword, full_name, 'user', 0, 0, verificationToken]
+      'INSERT INTO users (username, password, full_name, role, level, is_verified) VALUES (?, ?, ?, ?, ?, ?)',
+      [username, hashedPassword, full_name || username, 'user', 0, 1]
     );
 
-    // Gửi email xác nhận
-    const frontendUrl = process.env.FRONTEND_URL || 'https://credifyapp.site';
-    const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
-
-    await sendEmail({
-      to: email,
-      subject: 'Xác nhận đăng ký tài khoản - Credify',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-          <h2 style="color: #4f46e5; text-align: center;">Chào mừng bạn đến với Credify!</h2>
-          <p>Cảm ơn bạn đã đăng ký tài khoản. Vui lòng nhấn vào nút bên dưới để xác nhận email của bạn:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Xác nhận Email</a>
-          </div>
-          <p style="color: #64748b; font-size: 14px;">Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.</p>
-          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-          <p style="color: #94a3b8; font-size: 12px; text-align: center;">© ${new Date().getFullYear()} Credify.vn. All rights reserved.</p>
-        </div>
-      `
-    });
-    
-    console.log("Email xác nhận đã gửi thành công tới:", email);
-
-    res.status(201).json({ message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.' });
+    res.status(201).json({ message: 'Đăng ký thành công!' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Lỗi server' });
@@ -126,51 +78,26 @@ const register = async (req, res) => {
 
 const verifyEmail = async (req, res) => {
   const token = req.params.token ? req.params.token.trim() : '';
-  console.log('--- Bắt đầu xác thực email ---');
-  console.log('Token nhận được từ URL:', token);
-  console.log('Độ dài token:', token.length);
-
   try {
-    // Tìm user có token này và chưa được xác thực
     const [users] = await pool.query(
-      'SELECT id, email, is_verified FROM users WHERE verification_token = ?', 
+      'SELECT id, email, is_verified FROM users WHERE verification_token = ?',
       [token]
     );
-    
-    if (users.length === 0) {
-      console.log('KẾT QUẢ: Không tìm thấy user với token này trong Database.');
-      
-      // Kiểm tra xem có phải user đã xác thực rồi không
-      const [verifiedUsers] = await pool.query(
-        'SELECT id, email FROM users WHERE is_verified = 1 AND verification_token IS NULL LIMIT 1'
-      );
-      
-      if (verifiedUsers.length > 0) {
-        console.log('GỢI Ý: Có thể tài khoản đã được xác thực trước đó.');
-      }
 
-      return res.status(400).json({ 
-        message: 'Mã xác nhận không hợp lệ, đã hết hạn hoặc tài khoản đã được xác thực.' 
-      });
+    if (users.length === 0) {
+      return res.status(400).json({ message: 'Mã xác nhận không hợp lệ, đã hết hạn hoặc tài khoản đã được xác thực.' });
     }
 
     const user = users[0];
-    console.log('KẾT QUẢ: Tìm thấy user:', user.email);
-
     if (user.is_verified) {
-      console.log('KẾT QUẢ: User đã xác thực từ trước.');
       return res.json({ message: 'Tài khoản của bạn đã được xác nhận từ trước. Bạn có thể đăng nhập.' });
     }
 
-    // Cập nhật trạng thái
-    const [updateResult] = await pool.query(
+    await pool.query(
       'UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?',
       [user.id]
     );
 
-    console.log('KẾT QUẢ: Cập nhật thành công. Số dòng ảnh hưởng:', updateResult.affectedRows);
-    console.log('--- Kết thúc xác thực thành công ---');
-    
     res.json({ message: 'Xác nhận email thành công! Bạn có thể đăng nhập ngay bây giờ.' });
   } catch (err) {
     console.error(err);
@@ -179,10 +106,10 @@ const verifyEmail = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
   try {
-    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (users.length === 0) return res.status(400).json({ message: 'Email hoặc mật khẩu không đúng' });
+    const [users] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+    if (users.length === 0) return res.status(400).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
 
     const user = users[0];
     if (!user.password) return res.status(400).json({ message: 'Tài khoản này dùng Google Login' });
@@ -191,12 +118,8 @@ const login = async (req, res) => {
       return res.status(403).json({ message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.' });
     }
 
-    if (!user.is_verified) {
-      return res.status(401).json({ message: 'Tài khoản chưa được xác nhận. Vui lòng kiểm tra email của bạn.' });
-    }
-
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Email hoặc mật khẩu không đúng' });
+    if (!isMatch) return res.status(400).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
 
     sendTokenResponse(user, 200, res);
   } catch (err) {
@@ -220,7 +143,7 @@ const googleLogin = async (req, res) => {
     if (users.length === 0) {
       const [result] = await pool.query(
         'INSERT INTO users (email, full_name, password, role, level, is_verified) VALUES (?, ?, ?, ?, ?, ?)',
-        [email, name, null, 'user', 0, 1] // Mặc định role là 'user' và level 0 khi đăng ký qua Google
+        [email, name, null, 'user', 0, 1]
       );
       user = { id: result.insertId, email, full_name: name, role: 'user', level: 0 };
     } else {
@@ -235,13 +158,15 @@ const googleLogin = async (req, res) => {
 };
 
 const logout = (req, res) => {
-  // JWT is stateless — client simply discards the token from localStorage
   res.status(200).json({ message: 'Đã đăng xuất' });
 };
 
 const getMe = async (req, res) => {
   try {
-    const [users] = await pool.query('SELECT id, email, full_name, phone, role, level, status, is_verified, created_at FROM users WHERE id = ?', [req.user.id]);
+    const [users] = await pool.query(
+      'SELECT id, username, email, full_name, role, level, status, is_verified, created_at FROM users WHERE id = ?',
+      [req.user.id]
+    );
     if (users.length === 0) return res.status(404).json({ message: 'Không tìm thấy user' });
     res.json({ user: users[0] });
   } catch (err) {
@@ -251,7 +176,6 @@ const getMe = async (req, res) => {
 
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
-  console.log('GỢI Ý: Gửi yêu cầu khôi phục mật khẩu cho email:', email);
   try {
     const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     if (users.length === 0) return res.status(404).json({ message: 'Email không tồn tại' });
@@ -266,35 +190,28 @@ const forgotPassword = async (req, res) => {
 
     const frontendUrl = process.env.FRONTEND_URL || 'https://credifyapp.site';
     const resetUrl = `${frontendUrl}/reset-password/${token}`;
-    
-    // Gửi email khôi phục mật khẩu
+
     await sendEmail({
       to: email,
       subject: 'Khôi phục mật khẩu - Credify',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
           <h2 style="color: #4f46e5; text-align: center;">Khôi phục mật khẩu</h2>
-          <p>Chào bạn,</p>
-          <p>Bạn nhận được email này vì chúng tôi đã nhận được yêu cầu khôi phục mật khẩu cho tài khoản của bạn tại <strong>Credify.vn</strong>. Vui lòng nhấn vào nút bên dưới để đặt lại mật khẩu:</p>
+          <p>Vui lòng nhấn vào nút bên dưới để đặt lại mật khẩu:</p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${resetUrl}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Đặt lại mật khẩu</a>
           </div>
-          <p style="color: #64748b; font-size: 14px;">Link này sẽ hết hạn sau <strong>1 giờ</strong>. Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.</p>
+          <p style="color: #64748b; font-size: 14px;">Link này sẽ hết hạn sau <strong>1 giờ</strong>.</p>
           <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
           <p style="color: #94a3b8; font-size: 12px; text-align: center;">© ${new Date().getFullYear()} Credify.vn. All rights reserved.</p>
         </div>
       `
     });
 
-    console.log("Email khôi phục đã gửi thành công tới:", email);
     res.json({ message: 'Link khôi phục mật khẩu đã được gửi vào email của bạn.' });
   } catch (err) {
     console.error('LỖI FORGOT PASSWORD:', err);
-    res.status(500).json({ 
-      message: 'Lỗi hệ thống khi gửi mail', 
-      error: err.message,
-      detail: err.response?.body || 'Vui lòng kiểm tra log server trên Render'
-    });
+    res.status(500).json({ message: 'Lỗi hệ thống khi gửi mail', error: err.message });
   }
 };
 
@@ -305,7 +222,6 @@ const resetPassword = async (req, res) => {
       'SELECT * FROM users WHERE reset_token = ? AND reset_token_expires > NOW()',
       [token]
     );
-
     if (users.length === 0) return res.status(400).json({ message: 'Token không hợp lệ' });
 
     const salt = await bcrypt.genSalt(10);
@@ -323,24 +239,18 @@ const resetPassword = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
-  const { full_name, phone } = req.body;
+  const { full_name } = req.body;
   const userId = req.user.id;
 
   try {
-    await pool.query(
-      'UPDATE users SET full_name = ?, phone = ? WHERE id = ?',
-      [full_name, phone, userId]
-    );
+    await pool.query('UPDATE users SET full_name = ? WHERE id = ?', [full_name, userId]);
 
     const [users] = await pool.query(
-      'SELECT id, email, full_name, phone, role, level, status, is_verified, created_at FROM users WHERE id = ?',
+      'SELECT id, email, full_name, role, level, status, is_verified, created_at FROM users WHERE id = ?',
       [userId]
     );
 
-    res.json({
-      message: 'Cập nhật thông tin thành công',
-      user: users[0]
-    });
+    res.json({ message: 'Cập nhật thông tin thành công', user: users[0] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Lỗi server khi cập nhật profile' });
@@ -352,23 +262,16 @@ const changePassword = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // 1. Lấy thông tin user để kiểm tra mật khẩu cũ
     const [users] = await pool.query('SELECT password FROM users WHERE id = ?', [userId]);
     if (users.length === 0) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
 
-    const user = users[0];
-
-    // 2. So sánh mật khẩu cũ
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    const isMatch = await bcrypt.compare(oldPassword, users[0].password);
     if (!isMatch) return res.status(400).json({ message: 'Mật khẩu cũ không chính xác' });
 
-    // 3. Mã hóa mật khẩu mới
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // 4. Cập nhật mật khẩu mới
     await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
-
     res.json({ message: 'Đổi mật khẩu thành công' });
   } catch (err) {
     console.error('Lỗi khi đổi mật khẩu:', err);
@@ -376,4 +279,8 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { register, verifyEmail, login, googleLogin, logout, getMe, forgotPassword, resetPassword, updateProfile, changePassword, testEmail };
+module.exports = {
+  register, verifyEmail, login, googleLogin, logout,
+  getMe, forgotPassword, resetPassword,
+  updateProfile, changePassword, testEmail
+};

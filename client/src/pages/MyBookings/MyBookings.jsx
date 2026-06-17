@@ -83,8 +83,7 @@ const MyBookings = () => {
   const statusLabel = (status) => {
     if (status === 'created') return <span className="status-text created">Chờ thanh toán</span>;
     if (status === 'customer_paid') return <span className="status-text paid">Đang xử lý</span>;
-    if (status === 'staff_confirmed') return <span className="status-text completed">Hoàn thành</span>;
-    if (status === 'accountant_paid') return <span className="status-text completed">Hoàn thành</span>;
+    if (status === 'confirmed') return <span className="status-text completed">Hoàn thành</span>;
     if (status === 'rejected') return <span className="status-text rejected">Đã từ chối</span>;
     if (status === 'cancelled') return <span className="status-text cancelled">Đã hủy</span>;
     return <span className="status-text">{status}</span>;
@@ -186,7 +185,7 @@ const MyBookings = () => {
               <option value="all">Tất cả trạng thái</option>
               <option value="created">Chờ thanh toán</option>
               <option value="customer_paid">Đang xử lý</option>
-              <option value="staff_confirmed">Đã hoàn thành</option>
+              <option value="confirmed">Đã hoàn thành</option>
               <option value="rejected">Từ chối</option>
               <option value="cancelled">Đã hủy</option>
             </select>
@@ -220,7 +219,7 @@ const MyBookings = () => {
               <span className="value">{stats.customer_paid_count ?? 0}</span>
             </div>
           </div>
-          <div className="stat-card completed" onClick={() => { setStatusFilter('staff_confirmed'); setCurrentPage(1); }} style={{ cursor: 'pointer' }}>
+          <div className="stat-card completed" onClick={() => { setStatusFilter('confirmed'); setCurrentPage(1); }} style={{ cursor: 'pointer' }}>
             <div className="stat-info">
               <span className="label">Đã thanh toán</span>
               <span className="value">{stats.completed_count ?? 0}</span>

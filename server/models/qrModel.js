@@ -1,18 +1,14 @@
 // Định nghĩa cấu trúc các trường cho bảng qrs
 const qrFields = {
   id: 'INT AUTO_INCREMENT PRIMARY KEY',
+  name: 'VARCHAR(255) NULL',
   main_image: 'VARCHAR(255)', // Ảnh đại diện hiển thị ở danh sách ngoài (Card)
   qr_image: 'VARCHAR(255)', // Ảnh mã QR thực tế để khách quét
   max_amount_per_trans: 'DECIMAL(15, 2) NOT NULL', // Mức tiền tối đa một lần chuyển
-  base_fee_rate: 'DECIMAL(5, 2) DEFAULT 0', // Phí gốc (phí thực tế kế toán chuyển cho admin)
-  fee_rate: 'DECIMAL(5, 2) DEFAULT 0', // Phí mặc định (áp dụng cho Level 0)
-  fee_rate_l1: 'DECIMAL(5, 2) DEFAULT 0', // Phí cho thành viên cấp 1
-  fee_rate_l2: 'DECIMAL(5, 2) DEFAULT 0', // Phí cho thành viên cấp 2
-  fee_rate_l3: 'DECIMAL(5, 2) DEFAULT 0', // Phí cho thành viên cấp 3
+  daily_limit: 'DECIMAL(15, 2) NULL DEFAULT NULL', // Hạn mức tổng tiền có thể chuyển mỗi ngày
+  fee_rate: 'DECIMAL(5, 2) DEFAULT 0', // Phí mặc định áp dụng cho khách
   note: 'TEXT', // Ghi chú
   status: "ENUM('ready', 'maintenance') DEFAULT 'ready'", // Trạng thái QR
-  accountant_editable: 'TINYINT(1) DEFAULT 0', // Bật/tắt quyền cho kế toán chỉnh sửa QR
-  is_notify_telegram: 'TINYINT(1) DEFAULT 1', // Bật/tắt gửi thông báo về Telegram
   creator_id: 'INT NOT NULL', // Người tạo (FK tới users)
   created_at: 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
   updated_at: 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'

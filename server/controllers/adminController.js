@@ -6,14 +6,11 @@ exports.getAllUsers = async (req, res) => {
   try {
     const { search, role, status, page = 1, limit = 20 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
-    
-    // Thống kê số lượng theo vai trò
+
     const [stats] = await pool.query(`
       SELECT 
         COUNT(*) as total,
         SUM(CASE WHEN role = 'user' THEN 1 ELSE 0 END) as users,
-        SUM(CASE WHEN role = 'staff' THEN 1 ELSE 0 END) as staff,
-        SUM(CASE WHEN role = 'accountant' THEN 1 ELSE 0 END) as accountants,
         SUM(CASE WHEN role = 'admin_system' THEN 1 ELSE 0 END) as admins
       FROM users
     `);
@@ -22,31 +19,28 @@ exports.getAllUsers = async (req, res) => {
     const params = [];
 
     if (search) {
-      whereSql += ' AND (email LIKE ? OR full_name LIKE ?)';
-      params.push(`%${search}%`, `%${search}%`);
+      whereSql += ' AND (username LIKE ? OR full_name LIKE ? OR email LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
-
     if (role) {
       whereSql += ' AND role = ?';
       params.push(role);
     }
-
     if (status) {
       whereSql += ' AND status = ?';
       params.push(status);
     }
 
-    // Đếm tổng số user thỏa mãn điều kiện lọc để phân trang
     const [totalRows] = await pool.query(`SELECT COUNT(*) as total FROM users ${whereSql}`, params);
     const totalItems = totalRows[0].total;
 
-    let query = `SELECT id, email, phone, full_name, role, level, status, is_verified, created_at FROM users ${whereSql}`;
+    let query = `SELECT id, username, email, full_name, role, level, status, created_at FROM users ${whereSql}`;
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), offset);
 
     const [rows] = await pool.query(query, params);
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       data: rows,
       stats: stats[0],
       pagination: {
@@ -65,20 +59,22 @@ exports.getAllUsers = async (req, res) => {
 // Tạo người dùng mới (bởi Admin)
 exports.createUser = async (req, res) => {
   try {
-    const { email, password, full_name, phone, role, level } = req.body;
+    const { username, email, password, full_name, role, level } = req.body;
 
-    // Kiểm tra email tồn tại
-    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+    const [existing] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
     if (existing.length > 0) {
-      return res.status(400).json({ success: false, message: 'Email đã tồn tại' });
+      return res.status(400).json({ success: false, message: 'Tên đăng nhập đã tồn tại' });
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Chỉ cho phép role admin_system hoặc user
+    const validRole = ['admin_system', 'user'].includes(role) ? role : 'user';
+
     await pool.query(
-      'INSERT INTO users (email, password, full_name, phone, role, level, is_verified, status) VALUES (?, ?, ?, ?, ?, ?, 1, "active")',
-      [email, hashedPassword, full_name, phone, role || 'user', level !== undefined ? level : 0]
+      'INSERT INTO users (username, email, password, full_name, role, level, status) VALUES (?, ?, ?, ?, ?, ?, "active")',
+      [username, email || null, hashedPassword, full_name, validRole, level !== undefined ? level : 0]
     );
 
     res.json({ success: true, message: 'Tạo người dùng thành công' });
@@ -92,10 +88,13 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { full_name, phone, role, level, status, password } = req.body;
+    const { full_name, role, level, status, password } = req.body;
 
-    let query = 'UPDATE users SET full_name = ?, phone = ?, role = ?, level = ?, status = ?';
-    const params = [full_name, phone, role, level !== undefined ? level : 0, status];
+    // Chỉ cho phép role admin_system hoặc user
+    const validRole = ['admin_system', 'user'].includes(role) ? role : 'user';
+
+    let query = 'UPDATE users SET full_name = ?, role = ?, level = ?, status = ?';
+    const params = [full_name, validRole, level !== undefined ? level : 0, status];
 
     if (password && password.trim() !== '') {
       const salt = await bcrypt.genSalt(10);
@@ -133,8 +132,7 @@ exports.toggleUserStatus = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Không cho phép xóa chính mình (nếu cần check)
+
     if (parseInt(id) === req.user.id) {
       return res.status(400).json({ success: false, message: 'Bạn không thể xóa chính tài khoản của mình' });
     }
@@ -152,21 +150,16 @@ exports.deleteBooking = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Kiểm tra đơn hàng tồn tại
     const [booking] = await pool.query('SELECT id, code FROM bookings WHERE id = ?', [id]);
     if (booking.length === 0) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
     }
 
-    // Xóa các thông báo liên quan trước (để tránh lỗi khóa ngoại nếu có)
-    await pool.query('DELETE FROM notifications WHERE booking_id = ?', [id]);
-    
-    // Xóa đơn hàng
     await pool.query('DELETE FROM bookings WHERE id = ?', [id]);
 
-    res.json({ 
-      success: true, 
-      message: `Đã xóa đơn hàng #${booking[0].code.slice(-6)} thành công` 
+    res.json({
+      success: true,
+      message: `Đã xóa đơn hàng #${booking[0].code.slice(-6)} thành công`
     });
   } catch (error) {
     console.error('Delete Booking Error:', error);

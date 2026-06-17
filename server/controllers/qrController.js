@@ -5,9 +5,8 @@ const { cloudinary } = require('../config/cloudinary');
 const deleteCloudinaryImage = async (url) => {
   if (!url) return;
   try {
-    // URL Cloudinary có dạng: https://res.cloudinary.com/cloud_name/image/upload/v1234567/folder/public_id.jpg
     const parts = url.split('/');
-    const folderAndPublicId = parts.slice(-2).join('/').split('.')[0]; // Lấy 'folder/public_id'
+    const folderAndPublicId = parts.slice(-2).join('/').split('.')[0];
     await cloudinary.uploader.destroy(folderAndPublicId);
     console.log('Đã xóa ảnh cũ trên Cloudinary:', folderAndPublicId);
   } catch (err) {
@@ -15,22 +14,12 @@ const deleteCloudinaryImage = async (url) => {
   }
 };
 
-const parseTinyIntBoolean = (value, fallback = 1) => {
-  if (value === undefined || value === null || value === '') return fallback;
-  if (value === true || value === 1 || value === '1' || value === 'true') return 1;
-  if (value === false || value === 0 || value === '0' || value === 'false') return 0;
-  return fallback;
-};
-
 // Tạo mới một QR
 const createQR = async (req, res) => {
   try {
-    const { 
-      name, max_amount_per_trans, fee_rate, base_fee_rate, fee_rate_l1, fee_rate_l2, fee_rate_l3, 
-      note, status, is_notify_telegram 
-    } = req.body;
+    const { name, max_amount_per_trans, daily_limit, fee_rate, note, status } = req.body;
     const creator_id = req.user.id;
-    
+
     const main_image = req.files && req.files.main_image ? req.files.main_image[0].path : '';
     const qr_image = req.files && req.files.qr_image ? req.files.qr_image[0].path : '';
 
@@ -39,14 +28,13 @@ const createQR = async (req, res) => {
     }
 
     const qrStatus = status || 'ready';
-    const notifyTele = parseTinyIntBoolean(is_notify_telegram, 1);
 
     const [result] = await pool.query(
-      'INSERT INTO qrs (name, main_image, qr_image, max_amount_per_trans, base_fee_rate, fee_rate, fee_rate_l1, fee_rate_l2, fee_rate_l3, note, status, creator_id, is_notify_telegram) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO qrs (name, main_image, qr_image, max_amount_per_trans, daily_limit, fee_rate, note, status, creator_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
-        name || null, main_image, qr_image, max_amount_per_trans, 
-        base_fee_rate || 0, fee_rate || 0, fee_rate_l1 || 0, fee_rate_l2 || 0, fee_rate_l3 || 0, 
-        note, qrStatus, creator_id, notifyTele
+        name || null, main_image, qr_image,
+        max_amount_per_trans, daily_limit || null,
+        fee_rate || 0, note, qrStatus, creator_id
       ]
     );
 
@@ -58,11 +46,11 @@ const createQR = async (req, res) => {
         main_image,
         qr_image,
         max_amount_per_trans,
+        daily_limit: daily_limit || null,
         fee_rate,
         note,
         status: qrStatus,
-        creator_id,
-        is_notify_telegram: !!notifyTele
+        creator_id
       }
     });
   } catch (err) {
@@ -74,10 +62,7 @@ const createQR = async (req, res) => {
 // Cập nhật QR
 const updateQR = async (req, res) => {
   try {
-    const { 
-      name, max_amount_per_trans, fee_rate, base_fee_rate, fee_rate_l1, fee_rate_l2, fee_rate_l3, 
-      note, status, is_notify_telegram 
-    } = req.body;
+    const { name, max_amount_per_trans, daily_limit, fee_rate, note, status } = req.body;
     const qrId = req.params.id;
 
     const [existing] = await pool.query('SELECT * FROM qrs WHERE id = ?', [qrId]);
@@ -99,22 +84,14 @@ const updateQR = async (req, res) => {
 
     const updatedName = name !== undefined ? name : existing[0].name;
     const updatedMaxAmount = max_amount_per_trans ?? existing[0].max_amount_per_trans;
-    const updatedBaseFee = base_fee_rate ?? existing[0].base_fee_rate;
-    const updatedFeeDefault = fee_rate ?? existing[0].fee_rate;
-    const updatedFeeL1 = fee_rate_l1 ?? existing[0].fee_rate_l1;
-    const updatedFeeL2 = fee_rate_l2 ?? existing[0].fee_rate_l2;
-    const updatedFeeL3 = fee_rate_l3 ?? existing[0].fee_rate_l3;
+    const updatedDailyLimit = daily_limit !== undefined ? (daily_limit || null) : existing[0].daily_limit;
+    const updatedFeeRate = fee_rate ?? existing[0].fee_rate;
     const updatedNote = note ?? existing[0].note;
     const qrStatus = status || existing[0].status;
-    const notifyTele = parseTinyIntBoolean(is_notify_telegram, existing[0].is_notify_telegram);
 
     await pool.query(
-      'UPDATE qrs SET name = ?, main_image = ?, qr_image = ?, max_amount_per_trans = ?, base_fee_rate = ?, fee_rate = ?, fee_rate_l1 = ?, fee_rate_l2 = ?, fee_rate_l3 = ?, note = ?, status = ?, is_notify_telegram = ? WHERE id = ?',
-      [
-        updatedName, main_image, qr_image, updatedMaxAmount, 
-        updatedBaseFee, updatedFeeDefault, updatedFeeL1, updatedFeeL2, updatedFeeL3,
-        updatedNote, qrStatus, notifyTele, qrId
-      ]
+      'UPDATE qrs SET name = ?, main_image = ?, qr_image = ?, max_amount_per_trans = ?, daily_limit = ?, fee_rate = ?, note = ?, status = ? WHERE id = ?',
+      [updatedName, main_image, qr_image, updatedMaxAmount, updatedDailyLimit, updatedFeeRate, updatedNote, qrStatus, qrId]
     );
 
     res.json({ message: 'Cập nhật QR thành công' });
@@ -124,7 +101,7 @@ const updateQR = async (req, res) => {
   }
 };
 
-// Lấy tất cả QR (cho admin/staff) - Ưu tiên ready hiện đầu tiên
+// Lấy tất cả QR (cho admin) - Ưu tiên ready hiện đầu tiên
 const getAllQRs = async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -161,13 +138,11 @@ const getReadyQRs = async (req, res) => {
 const getReadyQRById = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `
-        SELECT q.*, u.full_name as creator_name
-        FROM qrs q
-        JOIN users u ON q.creator_id = u.id
-        WHERE q.id = ? AND q.status = 'ready'
-        LIMIT 1
-      `,
+      `SELECT q.*, u.full_name as creator_name
+       FROM qrs q
+       JOIN users u ON q.creator_id = u.id
+       WHERE q.id = ? AND q.status = 'ready'
+       LIMIT 1`,
       [req.params.id]
     );
     if (rows.length === 0) return res.status(404).json({ message: 'Không tìm thấy QR' });
@@ -178,7 +153,7 @@ const getReadyQRById = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái QR (staff)
+// Cập nhật trạng thái QR (admin)
 const updateQRStatus = async (req, res) => {
   try {
     const qrId = req.params.id;
@@ -199,78 +174,19 @@ const updateQRStatus = async (req, res) => {
   }
 };
 
-// Toggle quyền sửa QR cho accountant (chỉ admin/staff)
-const toggleAccountantEditable = async (req, res) => {
-  try {
-    const qrId = req.params.id;
-    const [existing] = await pool.query('SELECT id, accountant_editable FROM qrs WHERE id = ?', [qrId]);
-    if (existing.length === 0) return res.status(404).json({ message: 'Không tìm thấy QR' });
-
-    const newValue = existing[0].accountant_editable ? 0 : 1;
-    await pool.query('UPDATE qrs SET accountant_editable = ? WHERE id = ?', [newValue, qrId]);
-    res.json({ message: newValue ? 'Đã bật quyền sửa cho kế toán' : 'Đã tắt quyền sửa cho kế toán', accountant_editable: newValue });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-};
-
-// Accountant cập nhật QR (chỉ khi accountant_editable = 1)
-const accountantUpdateQR = async (req, res) => {
-  try {
-    const qrId = req.params.id;
-    const { max_amount_per_trans } = req.body;
-
-    const [existing] = await pool.query('SELECT * FROM qrs WHERE id = ?', [qrId]);
-    if (existing.length === 0) return res.status(404).json({ message: 'Không tìm thấy QR' });
-
-    if (!existing[0].accountant_editable) {
-      return res.status(403).json({ message: 'QR này không cho phép kế toán chỉnh sửa' });
-    }
-
-    let main_image = existing[0].main_image;
-    let qr_image = existing[0].qr_image;
-
-    if (req.files) {
-      if (req.files.main_image) {
-        await deleteCloudinaryImage(existing[0].main_image);
-        main_image = req.files.main_image[0].path;
-      }
-      if (req.files.qr_image) {
-        await deleteCloudinaryImage(existing[0].qr_image);
-        qr_image = req.files.qr_image[0].path;
-      }
-    }
-
-    const updatedMaxAmount = max_amount_per_trans ?? existing[0].max_amount_per_trans;
-
-    await pool.query(
-      'UPDATE qrs SET main_image = ?, qr_image = ?, max_amount_per_trans = ? WHERE id = ?',
-      [main_image, qr_image, updatedMaxAmount, qrId]
-    );
-
-    res.json({ message: 'Cập nhật QR thành công' });
-  } catch (err) {
-    console.error('Lỗi khi accountant cập nhật QR:', err);
-    res.status(500).json({ message: 'Lỗi server: ' + err.message });
-  }
-};
-
 // Xóa QR
 const deleteQR = async (req, res) => {
   try {
     const qrId = req.params.id;
-    
-    // Lấy thông tin QR để xóa ảnh trên Cloudinary
+
     const [existing] = await pool.query('SELECT main_image, qr_image FROM qrs WHERE id = ?', [qrId]);
     if (existing.length === 0) return res.status(404).json({ message: 'Không tìm thấy QR' });
 
-    // Xóa ảnh trên Cloudinary
     await deleteCloudinaryImage(existing[0].main_image);
     await deleteCloudinaryImage(existing[0].qr_image);
 
     const [result] = await pool.query('DELETE FROM qrs WHERE id = ?', [qrId]);
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Không tìm thấy QR để xóa' });
     }
@@ -300,8 +216,6 @@ module.exports = {
   getReadyQRs,
   getReadyQRById,
   updateQRStatus,
-  toggleAccountantEditable,
-  accountantUpdateQR,
   deleteQR,
   getAllQRs,
   getQRById
