@@ -1,369 +1,220 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import api from '../../api/axios';
 import './MyBookings.scss';
 
+const STATUS_MAP = {
+  created:       { label: 'Chờ thanh toán', cls: 'created' },
+  customer_paid: { label: 'Đang xử lý',     cls: 'paid' },
+  confirmed:     { label: 'Hoàn thành',      cls: 'completed' },
+  rejected:      { label: 'Từ chối',         cls: 'rejected' },
+  cancelled:     { label: 'Đã hủy',          cls: 'cancelled' },
+};
+
+const DATE_OPTIONS = [
+  { label: 'Tất cả thời gian', value: 'all' },
+  { label: 'Hôm nay',          value: 'today' },
+  { label: '7 ngày qua',       value: '7days' },
+  { label: '30 ngày qua',      value: '30days' },
+];
+
+const fmt = (v) => {
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n)) return '—';
+  return n.toLocaleString('vi-VN') + 'đ';
+};
+
+const fmtDate = (v) => {
+  if (!v) return '—';
+  const d = new Date(v);
+  if (isNaN(d)) return '—';
+  return d.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+};
+
+const shortCode = (code) => String(code || '').slice(-6);
+
 const MyBookings = () => {
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [qrNameFilter, setQrNameFilter] = useState('');
-  const [qrList, setQrList] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 20;
+  const [bookings, setBookings]       = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [search, setSearch]           = useState('');
+  const [statusFilter, setStatus]     = useState('all');
+  const [dateFilter, setDate]         = useState('all');
+  const [currentPage, setPage]        = useState(1);
+  const [totalPages, setTotalPages]   = useState(0);
+  const [total, setTotal]             = useState(0);
+  const PER_PAGE = 15;
 
-  const dateOptions = [
-    { label: 'Tất cả thời gian', value: 'all' },
-    { label: 'Hôm nay', value: 'today' },
-    { label: '7 ngày qua', value: '7days' },
-    { label: '30 ngày qua', value: '30days' },
-  ];
-
-  useEffect(() => {
-    api.get('/qrs').then(res => {
-      const names = [...new Set((res.data || []).map(q => q.name).filter(Boolean))].sort();
-      setQrList(names);
-    }).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const res = await api.get('/bookings/my', {
-          params: {
-            page: currentPage,
-            limit: itemsPerPage,
-            search: searchTerm.trim() || undefined,
-            qrName: qrNameFilter.trim() || undefined,
-            status: statusFilter === 'all' ? undefined : statusFilter,
-            dateRange: dateFilter === 'all' ? undefined : dateFilter
-          }
-        });
-
-        if (active) {
-          setBookings(res.data.bookings || []);
-          setStats(res.data.stats || null);
-          setTotalPages(res.data.totalPages || 0);
-        }
-      } catch (err) {
-        console.error('Lỗi khi tải đơn hàng của tôi:', err);
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    loadData();
-
-    return () => {
-      active = false;
-    };
-  }, [currentPage, searchTerm, qrNameFilter, statusFilter, dateFilter]);
-
-  const formatMoney = (value) => {
-    const n = Math.round(Number(value));
-    if (Number.isNaN(n)) return '—';
-    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VNĐ';
-  };
-
-  const formatDateTime = (value) => {
-    if (!value) return '—';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return '—';
-    return d.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-  };
- 
-  const statusLabel = (status) => {
-    if (status === 'created') return <span className="status-text created">Chờ thanh toán</span>;
-    if (status === 'customer_paid') return <span className="status-text paid">Đang xử lý</span>;
-    if (status === 'confirmed') return <span className="status-text completed">Hoàn thành</span>;
-    if (status === 'rejected') return <span className="status-text rejected">Đã từ chối</span>;
-    if (status === 'cancelled') return <span className="status-text cancelled">Đã hủy</span>;
-    return <span className="status-text">{status}</span>;
-  };
-
-  const shortCode = (code) => {
-    const raw = String(code || '');
-    return raw.length <= 6 ? raw : raw.slice(-6);
-  };
-
-  const handlePageChange = (pageNumber) => {
-    if (pageNumber === currentPage) return;
+  const load = useCallback(async () => {
     setLoading(true);
-    setCurrentPage(pageNumber);
-    window.scrollTo(0, 0);
-  };
+    try {
+      const res = await api.get('/bookings/my', {
+        params: {
+          page: currentPage, limit: PER_PAGE,
+          search: search.trim() || undefined,
+          status: statusFilter === 'all' ? undefined : statusFilter,
+          dateRange: dateFilter === 'all' ? undefined : dateFilter,
+        }
+      });
+      setBookings(res.data.bookings || []);
+      setTotalPages(res.data.totalPages || 0);
+      setTotal(res.data.total || 0);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, search, statusFilter, dateFilter]);
 
-  const renderSkeleton = () => (
-    <div className="loading-skeleton">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="skeleton-item"></div>
-      ))}
-    </div>
-  );
+  useEffect(() => { load(); }, [load]);
+
+  const changePage = (p) => { setPage(p); window.scrollTo(0, 0); };
 
   const renderPagination = () => {
     if (totalPages <= 1) return null;
     const pages = [];
-    const maxVisible = 5;
     let start = Math.max(1, currentPage - 2);
-    let end = Math.min(totalPages, start + maxVisible - 1);
-    if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
+    let end   = Math.min(totalPages, start + 4);
+    if (end - start < 4) start = Math.max(1, end - 4);
     for (let i = start; i <= end; i++) pages.push(i);
-
     return (
-      <div className="pagination">
-        <button type="button" className="page-btn" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>Trước</button>
-        {start > 1 && (
-          <>
-            <button type="button" className="page-btn" onClick={() => handlePageChange(1)}>1</button>
-            {start > 2 && <span className="page-ellipsis">...</span>}
-          </>
-        )}
-        {pages.map((p) => (
-          <button key={p} type="button" className={`page-btn ${currentPage === p ? 'active' : ''}`} onClick={() => handlePageChange(p)}>{p}</button>
-        ))}
-        {end < totalPages && (
-          <>
-            {end < totalPages - 1 && <span className="page-ellipsis">...</span>}
-            <button type="button" className="page-btn" onClick={() => handlePageChange(totalPages)}>{totalPages}</button>
-          </>
-        )}
-        <button type="button" className="page-btn" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Sau</button>
+      <div className="mb-pagination">
+        <button disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>Trước</button>
+        {start > 1 && <><button onClick={() => changePage(1)}>1</button>{start > 2 && <span>...</span>}</>}
+        {pages.map(p => <button key={p} className={currentPage === p ? 'active' : ''} onClick={() => changePage(p)}>{p}</button>)}
+        {end < totalPages && <>{end < totalPages - 1 && <span>...</span>}<button onClick={() => changePage(totalPages)}>{totalPages}</button></>}
+        <button disabled={currentPage === totalPages} onClick={() => changePage(currentPage + 1)}>Sau</button>
       </div>
     );
   };
 
   return (
-    <div className="my-bookings-page full-width">
-      <div className="my-bookings-header">
-        <div className="header-title">
+    <div className="mb-page">
+      {/* Header */}
+      <div className="mb-header">
+        <div className="mb-header-left">
           <h1>Đơn của tôi</h1>
-          <p>Quản lý và theo dõi lịch sử giao dịch của bạn</p>
+          <p>Lịch sử giao dịch của bạn · {total} đơn</p>
         </div>
-
-        <div className="header-controls">
-          <div className="search">
+        <div className="mb-controls">
+          <div className="mb-search">
+            <Search size={15} />
             <input
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
               placeholder="Tìm theo mã đơn..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
             />
           </div>
-
-          <div className="filters-group">
-            <select
-              value={qrNameFilter}
-              onChange={(e) => {
-                setQrNameFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-            >
-              <option value="">Tất cả tên QR</option>
-              {qrList.map(name => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-            >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="created">Chờ thanh toán</option>
-              <option value="customer_paid">Đang xử lý</option>
-              <option value="confirmed">Đã hoàn thành</option>
-              <option value="rejected">Từ chối</option>
-              <option value="cancelled">Đã hủy</option>
-            </select>
-
-            <select
-              value={dateFilter}
-              onChange={(e) => {
-                setDateFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-            >
-              {dateOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
+          <select value={statusFilter} onChange={e => { setStatus(e.target.value); setPage(1); }}>
+            <option value="all">Tất cả trạng thái</option>
+            <option value="created">Chờ thanh toán</option>
+            <option value="customer_paid">Đang xử lý</option>
+            <option value="confirmed">Hoàn thành</option>
+            <option value="rejected">Từ chối</option>
+            <option value="cancelled">Đã hủy</option>
+          </select>
+          <select value={dateFilter} onChange={e => { setDate(e.target.value); setPage(1); }}>
+            {DATE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
         </div>
       </div>
 
-      {stats && (
-        <div className="stats-grid">
-          <div className="stat-card total">
-            <div className="stat-info">
-              <span className="label">Tổng số đơn</span>
-              <span className="value">{stats.total}</span>
-            </div>
-          </div>
-          <div className="stat-card created" onClick={() => { setStatusFilter('customer_paid'); setCurrentPage(1); }} style={{ cursor: 'pointer' }}>
-            <div className="stat-info">
-              <span className="label">Đang xử lý</span>
-              <span className="value">{stats.customer_paid_count ?? 0}</span>
-            </div>
-          </div>
-          <div className="stat-card completed" onClick={() => { setStatusFilter('confirmed'); setCurrentPage(1); }} style={{ cursor: 'pointer' }}>
-            <div className="stat-info">
-              <span className="label">Đã thanh toán</span>
-              <span className="value">{stats.completed_count ?? 0}</span>
-            </div>
-          </div>
-          <div className="stat-card rejected" onClick={() => { setStatusFilter('rejected'); setCurrentPage(1); }} style={{ cursor: 'pointer' }}>
-            <div className="stat-info">
-              <span className="label">Từ chối</span>
-              <span className="value">{stats.rejected_count ?? 0}</span>
-            </div>
-          </div>
-          <div className="stat-card cancelled" onClick={() => { setStatusFilter('cancelled'); setCurrentPage(1); }} style={{ cursor: 'pointer' }}>
-            <div className="stat-info">
-              <span className="label">Đã hủy</span>
-              <span className="value">{stats.cancelled_count ?? 0}</span>
-            </div>
-          </div>
-          <div className="stat-card amount">
-            <div className="stat-info">
-              <span className="label">Tổng tiền giao dịch</span>
-              <span className="value">{formatMoney(stats.total_amount)}</span>
-            </div>
-          </div>
-          <div className="stat-card fee">
-            <div className="stat-info">
-              <span className="label">Tổng phí dịch vụ</span>
-              <span className="value">{formatMoney(stats.total_fee)}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="table-container desktop-only">
-        <table className="booking-table">
+      {/* Table */}
+      <div className="mb-table-wrap">
+        <table className="mb-table">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Mã đơn</th>
-              <th>Tên QR</th>
-              <th>Ngân hàng</th>
-              <th>Thời gian</th>
+              <th>QR</th>
+              <th>SĐT MoMo</th>
+              <th>Tên chính chủ</th>
               <th>Số tiền</th>
               <th>Phí</th>
-              <th>Thực nhận</th>
+              <th>Nhận được</th>
               <th>Trạng thái</th>
-              <th>Xác nhận</th>
-              <th>Thao tác</th>
+              <th>Thời gian</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={11}>
-                  {renderSkeleton()}
-                </td>
-              </tr>
+              <tr><td colSpan={10} className="mb-empty">
+                <div className="mb-skeleton">{[...Array(5)].map((_, i) => <div key={i} />)}</div>
+              </td></tr>
             ) : bookings.length === 0 ? (
-              <tr><td colSpan={11} className="empty">Không tìm thấy đơn hàng nào.</td></tr>
-            ) : (
-              bookings.map((b) => (
+              <tr><td colSpan={10} className="mb-empty">Không tìm thấy đơn hàng nào.</td></tr>
+            ) : bookings.map(b => {
+              const st = STATUS_MAP[b.status] || { label: b.status, cls: '' };
+              return (
                 <tr key={b.id}>
-                  <td data-label="ID">#{b.id}</td>
-                  <td data-label="Mã đơn"><strong>{shortCode(b.code)}</strong></td>
-                  <td data-label="Tên QR">{b.qr_name || '—'}</td>
-                  <td data-label="Ngân hàng">{b.customer_bank_name || '—'}</td>
-                  <td data-label="Thời gian">{formatDateTime(b.created_at)}</td>
-                  <td data-label="Số tiền">{formatMoney(b.transfer_amount)}</td>
-                  <td data-label="Phí">{formatMoney(b.fee_amount)}</td>
-                  <td data-label="Thực nhận"><strong style={{ color: '#10b981' }}>{formatMoney(b.net_amount)}</strong></td>
-                  <td data-label="Trạng thái">{statusLabel(b.status)}</td>
-                  <td data-label="Xác nhận">
-                    {b.is_valid === 'yes' ? (
-                      <span className="valid-badge yes">✓ Có</span>
-                    ) : b.is_valid === 'no' ? (
-                      <span className="valid-badge no">✗ Không</span>
-                    ) : (
-                      <span className="valid-badge none">—</span>
-                    )}
-                  </td>
-                  <td data-label="Thao tác">
-                    {b.status === 'created' && (
-                      <button
-                        className="pay-btn"
-                        onClick={() => navigate(`/payment/${b.id}`)}
-                      >
-                        Thanh toán
-                      </button>
-                    )}
-                    <button className="detail-btn" onClick={() => navigate(`/my-bookings/${b.id}`)}>
-                      Chi tiết
-                    </button>
+                  <td><span className="mb-code">#{shortCode(b.code)}</span></td>
+                  <td>{b.qr_name || '—'}</td>
+                  <td className="mb-mono">{b.customer_account_number || '—'}</td>
+                  <td>{b.customer_account_holder || '—'}</td>
+                  <td className="mb-amount">{fmt(b.transfer_amount)}</td>
+                  <td className="mb-fee">{fmt(b.fee_amount)}</td>
+                  <td className="mb-net">{fmt(b.net_amount)}</td>
+                  <td><span className={`mb-status ${st.cls}`}>{st.label}</span></td>
+                  <td className="mb-date">{fmtDate(b.created_at)}</td>
+                  <td>
+                    <div className="mb-actions">
+                      {b.status === 'created' && (
+                        <button className="mb-btn-pay" onClick={() => navigate(`/payment/${b.id}`)}>Thanh toán</button>
+                      )}
+                      <button className="mb-btn-detail" onClick={() => navigate(`/my-bookings/${b.id}`)}>Chi tiết</button>
+                    </div>
                   </td>
                 </tr>
-              ))
-            )}
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      <div className="booking-mobile-list mobile-only">
+      {/* Mobile cards */}
+      <div className="mb-cards">
         {loading ? (
-          <div className="loading-skeleton">
-            {[...Array(5)].map((_, i) => <div key={i} className="skeleton-item" />)}
-          </div>
+          <div className="mb-skeleton">{[...Array(4)].map((_, i) => <div key={i} />)}</div>
         ) : bookings.length === 0 ? (
-          <div className="empty">Không có dữ liệu đơn hàng.</div>
-        ) : (
-          bookings.map((b) => (
-            <div key={b.id} className="booking-mobile-card">
-              <div className="card-top">
-                <span className="date">{formatDateTime(b.created_at)}</span>
-                <span className="amount">{formatMoney(b.transfer_amount)}</span>
+          <div className="mb-empty">Không có đơn hàng.</div>
+        ) : bookings.map(b => {
+          const st = STATUS_MAP[b.status] || { label: b.status, cls: '' };
+          return (
+            <div key={b.id} className="mb-card">
+              <div className="mb-card-row top">
+                <span className="mb-code">#{shortCode(b.code)}</span>
+                <span className={`mb-status ${st.cls}`}>{st.label}</span>
               </div>
-              <div className="card-middle">
-                <div className="code-wrapper">
-                  <span className="code">{shortCode(b.code)}</span>
-                </div>
-                <div className="validation-mobile">
-                  <span className="label">Xác nhận: </span>
-                  {b.is_valid === 'yes'
-                    ? <span className="valid-yes">✓ Có</span>
-                    : b.is_valid === 'no'
-                      ? <span className="valid-no">✗ Không</span>
-                      : <span className="valid-none">—</span>}
-                </div>
+              <div className="mb-card-row">
+                <span className="mb-card-label">QR</span>
+                <span>{b.qr_name || '—'}</span>
               </div>
-              <div className="card-bottom">
-                <div className="status-badge-wrapper">
-                  {statusLabel(b.status)}
-                </div>
-                <div className="card-actions">
-                  {b.status === 'created' && (
-                    <button className="pay-btn-mobile" onClick={() => navigate(`/payment/${b.id}`)}>
-                      Thanh toán
-                    </button>
-                  )}
-                  <button className="detail-btn-mobile" onClick={() => navigate(`/my-bookings/${b.id}`)}>
-                    Chi tiết
-                  </button>
-                </div>
+              <div className="mb-card-row">
+                <span className="mb-card-label">SĐT MoMo</span>
+                <span className="mb-mono">{b.customer_account_number || '—'}</span>
+              </div>
+              <div className="mb-card-row">
+                <span className="mb-card-label">Số tiền</span>
+                <span className="mb-amount">{fmt(b.transfer_amount)}</span>
+              </div>
+              <div className="mb-card-row">
+                <span className="mb-card-label">Nhận được</span>
+                <span className="mb-net">{fmt(b.net_amount)}</span>
+              </div>
+              <div className="mb-card-row">
+                <span className="mb-card-label">Thời gian</span>
+                <span className="mb-date">{fmtDate(b.created_at)}</span>
+              </div>
+              <div className="mb-card-actions">
+                {b.status === 'created' && (
+                  <button className="mb-btn-pay" onClick={() => navigate(`/payment/${b.id}`)}>Thanh toán</button>
+                )}
+                <button className="mb-btn-detail" onClick={() => navigate(`/my-bookings/${b.id}`)}>Chi tiết</button>
               </div>
             </div>
-          ))
-        )}
+          );
+        })}
       </div>
 
       {renderPagination()}

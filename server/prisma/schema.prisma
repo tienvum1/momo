@@ -68,16 +68,9 @@ model Booking {
   qr_id                    Int
   customer_id              Int
 
-  // Thông tin ngân hàng khách
-  customer_bank_name        String       @db.VarChar(120)
+  // Thông tin MoMo khách
   customer_account_number   String       @db.VarChar(60)
   customer_account_holder   String       @db.VarChar(255)
-
-  // Thông tin ngân hàng admin (snapshot)
-  admin_bank_name           String?      @db.VarChar(120)
-  admin_account_number      String?      @db.VarChar(60)
-  admin_account_holder      String?      @db.VarChar(255)
-  admin_bank_qr_image       String?      @db.VarChar(500)
 
   // Tài chính
   transfer_amount           Decimal      @db.Decimal(15, 2)

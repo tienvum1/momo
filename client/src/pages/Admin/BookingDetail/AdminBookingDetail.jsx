@@ -139,8 +139,7 @@ const AdminBookingDetail = () => {
           <tr><th>Mã đơn</th><td className="mono">{shortCode(booking.code)}</td></tr>
           <tr><th>Tên QR</th><td>{booking.qr_name || '—'}</td></tr>
           <tr><th>Khách hàng</th><td>{booking.customer_name || '—'} ({booking.customer_email || '—'})</td></tr>
-          <tr><th>Ngân hàng khách</th><td>{booking.customer_bank_name || '—'}</td></tr>
-          <tr><th>Số tài khoản khách</th><td className="mono">{booking.customer_account_number || '—'}</td></tr>
+          <tr><th>Số điện thoại MoMo</th><td className="mono">{booking.customer_account_number || '—'}</td></tr>
           <tr><th>Tên chính chủ</th><td>{booking.customer_account_holder || '—'}</td></tr>
           <tr><th>Tiền khách chuyển</th><td><strong>{formatMoney(booking.transfer_amount)}</strong></td></tr>
           <tr><th>Phí (%)</th><td>{booking.fee_rate}% → {formatMoney(booking.fee_amount)}</td></tr>

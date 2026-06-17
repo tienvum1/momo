@@ -1,380 +1,267 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { Clock, Copy, CheckCircle2, Camera, Lock, AlertTriangle, X, ShieldCheck, Zap, Headphones, Building2 } from 'lucide-react';
 import api from '../../api/axios';
 import './BookingPayment.scss';
 
 const BookingPayment = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
+
   const [booking, setBooking] = useState(null);
   const [qr, setQr] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [proofFiles, setProofFiles] = useState([]);
   const [proofPreviews, setProofPreviews] = useState([]);
-  const [idCardFiles, setIdCardFiles] = useState([]);
-  const [idCardPreviews, setIdCardPreviews] = useState([]);
   const [paymentNote, setPaymentNote] = useState('');
-  const [submittingPaid, setSubmittingPaid] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [copied, setCopied] = useState(false);
 
-  const formatMoney = (value) => {
-    const n = Math.round(Number(value));
-    if (!Number.isFinite(n)) return '—';
-    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VNĐ';
+  const fmt = (v) => {
+    let val = v;
+    if (val && typeof val === 'object' && typeof val.toNumber === 'function') val = val.toNumber();
+    const n = Math.round(parseFloat(val) || 0);
+    return n.toLocaleString('vi-VN') + 'đ';
   };
 
-  const formatDateTime = (value) => {
-    if (!value) return '—';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return '—';
-    return d.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-  };
+  const shortCode = (code) => String(code || '').slice(-6);
 
-  const shortCode = (code) => {
-    const raw = String(code || '');
-    return raw.length <= 6 ? raw : raw.slice(-6);
+  const toNum = (v) => {
+    if (v === null || v === undefined) return 0;
+    if (typeof v === 'object' && typeof v.toNumber === 'function') return v.toNumber();
+    if (typeof v === 'number') return v;
+    return parseFloat(String(v)) || 0;
   };
 
   useEffect(() => {
     let active = true;
-
-    const fetchData = async () => {
-      try {
-        const bookingRes = await api.get(`/bookings/my/${bookingId}`);
-        if (active) {
-          const bData = bookingRes.data;
-          setBooking(bData);
-
-          const qrRes = await api.get(`/qrs/ready/${bData.qr_id}`);
-          if (active) {
-            setQr(qrRes.data);
-          }
-        }
-      } catch (err) {
-        if (active) {
-          setError(err.response?.data?.message || 'Không thể tải thông tin thanh toán');
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      active = false;
-    };
+    api.get(`/bookings/my/${bookingId}`)
+      .then((res) => {
+        if (!active) return;
+        const d = res.data;
+        d.transfer_amount = toNum(d.transfer_amount);
+        d.fee_rate        = toNum(d.fee_rate);
+        d.fee_amount      = toNum(d.fee_amount);
+        d.net_amount      = toNum(d.net_amount);
+        setBooking(d);
+        setQr({ qr_image: d.qr_image, name: d.qr_name });
+      })
+      .catch((err) => { if (active) setError(err.response?.data?.message || 'Không thể tải thông tin'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [bookingId]);
 
   useEffect(() => {
-    if (!booking || booking.status !== 'created' || !booking.server_time || !booking.expires_at) {
-      return;
-    }
-
-    // Tính toán độ lệch thời gian giữa client và server một lần duy nhất
-    const serverTime = new Date(booking.server_time).getTime();
-    const localTimeAtFetch = Date.now();
-    const timeOffset = localTimeAtFetch - serverTime;
-
-    const calculateTimeLeft = () => {
-      const expiryTimeServer = new Date(booking.expires_at).getTime();
-      const nowLocal = Date.now();
-      
-      // Thời điểm hết hạn quy đổi ra giờ local của máy khách
-      const expiryTimeLocal = expiryTimeServer + timeOffset;
-      const difference = expiryTimeLocal - nowLocal;
-
-      if (difference <= 0) {
+    if (!booking || booking.status !== 'created' || !booking.server_time || !booking.expires_at) return;
+    const offset = Date.now() - new Date(booking.server_time).getTime();
+    const tick = () => {
+      const diff = new Date(booking.expires_at).getTime() + offset - Date.now();
+      if (diff <= 0) {
         setTimeLeft(0);
+        if (booking.status === 'created') api.patch(`/bookings/${booking.id}/cancel`).catch(() => {});
         return;
       }
-
-      const totalSeconds = Math.floor(difference / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      
-      setTimeLeft(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
+      const m = Math.floor(diff / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${m}:${s < 10 ? '0' : ''}${s}`);
     };
-
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
-
-    return () => clearInterval(timer);
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
   }, [booking]);
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    // Giới hạn tối đa 10 hình
-    const newFiles = [...proofFiles, ...files].slice(0, 10);
-    setProofFiles(newFiles);
-
-    const newPreviews = [];
-    let processed = 0;
-
-    newFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newPreviews.push(reader.result);
-        processed++;
-        if (processed === newFiles.length) {
-          setProofPreviews(newPreviews);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!files.length) return;
+    const merged = [...proofFiles, ...files].slice(0, 5);
+    setProofFiles(merged);
+    const previews = [];
+    let done = 0;
+    merged.forEach((f) => {
+      const r = new FileReader();
+      r.onloadend = () => { previews.push(r.result); if (++done === merged.length) setProofPreviews([...previews]); };
+      r.readAsDataURL(f);
     });
   };
 
-  const removeProof = (index) => {
-    const newFiles = proofFiles.filter((_, i) => i !== index);
-    const newPreviews = proofPreviews.filter((_, i) => i !== index);
-    setProofFiles(newFiles);
-    setProofPreviews(newPreviews);
+  const removeProof = (i) => {
+    setProofFiles(proofFiles.filter((_, idx) => idx !== i));
+    setProofPreviews(proofPreviews.filter((_, idx) => idx !== i));
   };
 
-  const handleIdCardChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-    const newFiles = [...idCardFiles, ...files].slice(0, 2);
-    setIdCardFiles(newFiles);
-    const newPreviews = [];
-    let processed = 0;
-    newFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newPreviews.push(reader.result);
-        processed++;
-        if (processed === newFiles.length) setIdCardPreviews([...newPreviews]);
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removeIdCard = (index) => {
-    setIdCardFiles(idCardFiles.filter((_, i) => i !== index));
-    setIdCardPreviews(idCardPreviews.filter((_, i) => i !== index));
-  };
-
-  const handleCustomerPaid = () => {
-    if (!booking) return;
-    if (booking.status !== 'created') return;
-    if (timeLeft === 0) {
-      setError('Đơn hàng đã hết hạn thanh toán (30 phút). Vui lòng tạo đơn mới.');
-      return;
-    }
-    if (proofFiles.length === 0) {
-      setError('Vui lòng tải ít nhất một ảnh bill/chứng từ');
-      return;
-    }
-
+  const handleSubmit = () => {
+    if (!booking || booking.status !== 'created') return;
+    if (timeLeft === 0) { setError('Đơn đã hết hạn.'); return; }
+    if (!proofFiles.length) { setError('Vui lòng tải ít nhất một ảnh biên lai'); return; }
     setError('');
-    setSubmittingPaid(true);
+    setSubmitting(true);
     const form = new FormData();
-    proofFiles.forEach((file) => {
-      form.append('proof', file);
-    });
-    idCardFiles.forEach((file) => {
-      form.append('id_card', file);
-    });
+    proofFiles.forEach((f) => form.append('proof', f));
     if (paymentNote.trim()) form.append('note', paymentNote.trim());
-
-    api.post(`/bookings/${booking.id}/customer-paid`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-      .then(() => {
-        navigate(`/my-bookings/${booking.id}`);
-      })
-      .catch((err) => {
-        const errMsg = err.response?.data?.message || 'Lỗi khi upload bill';
-        setError(errMsg);
-      })
-      .finally(() => setSubmittingPaid(false));
+    api.post(`/bookings/${booking.id}/customer-paid`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
+      .then(() => navigate(`/my-bookings/${booking.id}`))
+      .catch((err) => setError(err.response?.data?.message || 'Lỗi khi xác nhận'))
+      .finally(() => setSubmitting(false));
   };
 
-  if (loading) return <div className="payment-loading">Đang tải thông tin thanh toán...</div>;
+  if (loading) return <div className="bp-loading">Đang tải...</div>;
+  if (error && !booking) return <div className="bp-error-page"><p>{error}</p><Link to="/">← Trang chủ</Link></div>;
+  if (!booking || !qr) return <div className="bp-loading">Không tìm thấy đơn hàng</div>;
 
-  if (error && !booking) {
-    return (
-      <div className="payment-error">
-        <h1>Lỗi</h1>
-        <p>{error}</p>
-        <Link to="/" className="back-link">Quay về Trang chủ</Link>
-      </div>
-    );
-  }
-
-  if (!booking || !qr) return <div className="payment-loading">Không tìm thấy đơn hàng</div>;
+  const isExpired = timeLeft === 0;
+  const canSubmit = !submitting && booking.status === 'created' && !isExpired;
 
   return (
-    <div className="booking-payment-page">
-      <div className="payment-top">
-        <Link to="/" className="back-link">← Quay về</Link>
-        <div className="payment-title-group">
-          <h1>Thanh toán đơn {shortCode(booking.code)}</h1>
-        </div>
+    <div className="bp-page">
+      {/* Topbar */}
+      <div className="bp-topbar">
+        <Link to="/" className="bp-back">← Quay lại</Link>
+        <h1 className="bp-title">Thanh toán đơn {shortCode(booking.code)}</h1>
       </div>
 
-      <div className="payment-grid">
-        <section className="qr-panel">
-          <div style={{ width: '100%', lineHeight: 0, overflow: 'hidden' }}>
-            <img
-              src={qr.qr_image}
-              alt={`QR ${qr.id}`}
-              style={{
-                display: 'block',
-                width: '100%',
-                height: 'auto',
-                borderRadius: '12px',
-              }}
-            />
-          </div>
-          <div className="qr-meta">
-            <div className="qr-meta-row">
-              <span className="label">Số tiền cần chuyển</span>
-              <span className="value">{formatMoney(booking.transfer_amount)}</span>
+      <div className="bp-grid">
+        {/* ── LEFT: QR panel ── */}
+        <div className="bp-left">
+          <div className="bp-qr-card">
+            {/* Header */}
+            <div className="bp-qr-header">
+              <div>
+                <div className="bp-qr-title">Quét mã để chuyển tiền</div>
+              </div>
             </div>
-            <div className="qr-meta-row">
-              <span className="label">Phí ({booking.fee_rate}%)</span>
-              <span className="value">{formatMoney(booking.fee_amount)}</span>
+
+            {/* QR image */}
+            <div className="bp-qr-img-wrap">
+              {qr.qr_image
+                ? <img src={qr.qr_image} alt="QR" className="bp-qr-img" />
+                : <div className="bp-qr-placeholder">Không có ảnh QR</div>
+              }
             </div>
-            <div className="qr-meta-row">
-              <span className="label">Thực nhận</span>
-              <span className="value">{formatMoney(booking.net_amount)}</span>
-            </div>
-            <div className="qr-meta-row">
-              <span className="label">Thời gian tạo</span>
-              <span className="value">{formatDateTime(booking.created_at)}</span>
-            </div>
-            {qr.note && (
-              <div className="qr-note">
-                <strong>Lưu ý:</strong> {qr.note}
+
+            {/* Countdown */}
+            {timeLeft !== null && (
+              <div className={`bp-countdown ${isExpired ? 'expired' : ''}`}>
+                {isExpired ? <span>Đơn hàng đã hết hạn. Vui lòng tạo đơn mới.</span> : (
+                  <><span>Thanh toán trong</span><strong>{timeLeft}</strong></>
+                )}
               </div>
             )}
-          </div>
-        </section>
 
-        <section className="upload-panel">
-          <div className="panel-header-flex">
-            <h2>Xác nhận đã chuyển tiền</h2>
+            {/* Order detail */}
+            <div className="bp-order-detail">
+              <div className="bp-detail-title">Chi tiết đơn hàng</div>
+              <div className="bp-detail-row">
+                <span>Mã đơn hàng</span>
+                <span className="bp-code-cell">
+                  {shortCode(booking.code)}
+                  <button className="bp-copy-btn" onClick={() => { navigator.clipboard.writeText(shortCode(booking.code)); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>
+                    {copied ? <CheckCircle2 size={14} color="#16a34a" /> : <Copy size={14} />}
+                  </button>
+                </span>
+              </div>
+              <div className="bp-detail-row">
+                <span>Số tiền cần chuyển</span>
+                <span className="bp-amount-highlight">{fmt(booking.transfer_amount)}</span>
+              </div>
+              <div className="bp-detail-row">
+                <span>Phí giao dịch</span>
+                <div className="bp-fee-cell">
+                  <span className="bp-fee-badge">{booking.fee_rate}%</span>
+                  <span className="bp-fee-val">{fmt(booking.fee_amount)}</span>
+                </div>
+              </div>
+              <div className="bp-detail-row net-row">
+                <span>Bạn sẽ nhận được</span>
+                <span className="bp-net-value">{fmt(booking.net_amount)}</span>
+              </div>
+            </div>
+
+            {/* Trust badges */}
+            <div className="bp-badges">
+              <div className="bp-badge"><ShieldCheck size={18} /><span>An toàn<br/>bảo mật</span></div>
+              <div className="bp-badge"><Zap size={18} /><span>Nhận tiền<br/>tức thì</span></div>
+              <div className="bp-badge"><Headphones size={18} /><span>Hỗ trợ<br/>24/7</span></div>
+              <div className="bp-badge"><Building2 size={18} /><span>Được bảo trợ bởi<br/>ngân hàng</span></div>
+            </div>
           </div>
-          
-          {timeLeft !== null && (
-            <div className={`payment-countdown ${timeLeft === 0 ? 'expired' : ''}`}>
-              {timeLeft === 0 ? (
-                <span>Đơn hàng đã hết hạn thanh toán (30 phút). Vui lòng tạo đơn mới.</span>
+        </div>
+
+        {/* ── RIGHT: Upload panel ── */}
+        <div className="bp-right">
+          <div className="bp-upload-card">
+            <h2 className="bp-upload-title">Xác nhận thanh toán</h2>
+            <p className="bp-upload-sub">Sau khi chuyển khoản thành công, vui lòng tải lên ảnh giao dịch để chúng tôi xác nhận.</p>
+
+            {/* Upload */}
+            <div className="bp-field">
+              <label className="bp-field-label">Ảnh biên lai / ảnh chụp màn hình</label>
+              {proofPreviews.length === 0 ? (
+                <label className="bp-upload-zone">
+                  <input type="file" accept="image/*" multiple onChange={handleFileChange} disabled={!canSubmit} />
+                  <div className="bp-upload-zone-content">
+                    <div className="bp-upload-icon-wrap">
+                      <Camera size={36} />
+                    </div>
+                    <span className="bp-upload-cta">Tải ảnh lên</span>
+                    <span className="bp-upload-hint">Hỗ trợ JPG, PNG · tối đa 5 ảnh</span>
+                  </div>
+                </label>
               ) : (
-                <span>Thời gian còn lại để thanh toán: <strong>{timeLeft}</strong></span>
+                <div className="bp-previews">
+                  {proofPreviews.map((src, i) => (
+                    <div key={i} className="bp-preview-item">
+                      <img src={src} alt={`bill ${i + 1}`} />
+                      <button type="button" className="bp-remove-btn" onClick={() => removeProof(i)}>×</button>
+                    </div>
+                  ))}
+                  {proofFiles.length < 5 && (
+                    <label className="bp-add-more">
+                      <input type="file" accept="image/*" multiple onChange={handleFileChange} disabled={!canSubmit} />
+                      <span>+</span>
+                    </label>
+                  )}
+                </div>
               )}
             </div>
-          )}
 
-          <p className="hint">Vui lòng quét mã QR bên trái để chuyển tiền, sau đó tải ảnh bill và ghi chú (nếu có) để chúng tôi xác nhận.</p>
-          
-          <div className="upload-form">
-            <div className="field">
-              <span>Ảnh bill/chứng từ (tối đa 10 ảnh)</span>
-              <div className="proof-previews-grid">
-                {proofPreviews.map((preview, index) => (
-                  <div key={index} className="proof-preview-container">
-                    <img src={preview} alt={`Proof preview ${index + 1}`} className="proof-preview-img" />
-                    <button 
-                      type="button" 
-                      className="remove-proof-btn" 
-                      onClick={() => removeProof(index)}
-                      title="Xóa ảnh"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                
-                {proofFiles.length < 3 && (
-                  <label className="file-upload-box">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      disabled={booking.status !== 'created' || submittingPaid || timeLeft === 0}
-                    />
-                    <div className="upload-placeholder">
-                      <div className="plus-icon">+</div>
-                      <span>Thêm ảnh</span>
-                    </div>
-                  </label>
-                )}
+            {/* Note */}
+            <div className="bp-field">
+              <label className="bp-field-label">Ghi chú (không bắt buộc)</label>
+              <div className="bp-textarea-wrap">
+                <textarea
+                  value={paymentNote}
+                  onChange={(e) => setPaymentNote(e.target.value.slice(0, 200))}
+                  placeholder="Nhập ghi chú cho nhân viên..."
+                  rows={3}
+                  disabled={!canSubmit}
+                  maxLength={200}
+                />
+                <span className="bp-char-count">{paymentNote.length}/200</span>
               </div>
             </div>
 
-            <div className="field">
-              <span>Ảnh CCCD/Căn cước (tối đa 2 ảnh, tuỳ chọn)</span>
-              <div className="proof-previews-grid">
-                {idCardPreviews.map((preview, index) => (
-                  <div key={index} className="proof-preview-container">
-                    <img src={preview} alt={`CCCD ${index + 1}`} className="proof-preview-img" />
-                    <button
-                      type="button"
-                      className="remove-proof-btn"
-                      onClick={() => removeIdCard(index)}
-                      title="Xóa ảnh"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                {idCardFiles.length < 2 && (
-                  <label className="file-upload-box">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleIdCardChange}
-                      disabled={booking.status !== 'created' || submittingPaid || timeLeft === 0}
-                    />
-                    <div className="upload-placeholder">
-                      <div className="plus-icon">+</div>
-                      <span>Thêm ảnh CCCD</span>
-                    </div>
-                  </label>
-                )}
-              </div>
-            </div>
-
-            <label className="field">
-              <span>Ghi chú (tuỳ chọn)</span>
-              <textarea
-                value={paymentNote}
-                onChange={(e) => setPaymentNote(e.target.value)}
-                placeholder="Nhập ghi chú cho nhân viên..."
-                rows={4}
-                disabled={booking.status !== 'created' || submittingPaid || timeLeft === 0}
-              />
-            </label>
-
-            {error && <div className="order-error">{error}</div>}
-
-            <div className="amount-warning">
-              <div className="warning-title">⚠️ Lưu ý quan trọng:</div>
-              <ul className="warning-list">
-                <li>Chỉ thanh toán trong hạn mức của thẻ. Nếu quẹt vượt hạn mức, giao dịch có thể bị <strong>hold (giữ tiền)</strong>.</li>
-                <li>Nên chuyển số tiền lẻ (ví dụ: 1.250.000 VNĐ – số tiền có hàng nghìn) để dễ xử lý.</li>
-                <li>Sử dụng thẻ thuộc ngân hàng được hỗ trợ.</li>
-                <li>Sau khi thanh toán, chụp lại màn hình giao dịch thành công để làm bằng chứng.</li>
-                <li>Hãy chuyển <strong>đúng chính xác</strong> số tiền để đơn hàng được duyệt bởi chúng tôi.</li>
+            {/* Warning */}
+            <div className="bp-warning-box">
+              <div className="bp-warning-title"><AlertTriangle size={15} /> Lưu ý quan trọng</div>
+              <ul>
+                <li>Vui lòng chuyển đúng số tiền và nội dung chuyển khoản (nếu có).</li>
+                <li>Nội dung chuyển khoản <strong>không liên quan</strong> đến rút tiền, phí trả sau.</li>
+                <li>Chỉ tải lên ảnh giao dịch thành công.</li>
+                <li>Đơn hàng sẽ tự động hủy nếu không thanh toán trong thời gian quy định.</li>
               </ul>
             </div>
 
-            <button
-              className="create-btn"
-              onClick={handleCustomerPaid}
-              disabled={submittingPaid || booking.status !== 'created' || timeLeft === 0}
-            >
-              {submittingPaid ? 'Đang xử lý...' : 'Xác nhận đã chuyển tiền'}
+            {error && <div className="bp-error-msg"><X size={14} /> {error}</div>}
+
+            <button className="bp-submit-btn" onClick={handleSubmit} disabled={!canSubmit}>
+              {submitting ? 'Đang xử lý...' : 'Tôi đã thanh toán'}
             </button>
+
+            <p className="bp-secure-note"><Lock size={12} /> Thông tin của bạn được bảo mật tuyệt đối</p>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );

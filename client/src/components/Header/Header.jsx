@@ -21,11 +21,11 @@ const Header = ({ user, handleLogout }) => {
 
           <Link to="/" className="logo-container" onClick={() => setIsMenuOpen(false)}>
             <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVW7rlSPHTehp-w35Km0QF380L2eZC-RuZmw&s"
-              alt="Credify.vn Logo"
+              src="/logo.svg"
+              alt="Momo247 Logo"
               className="logo-img"
             />
-            <span className="brand-name">Credify</span>
+          
           </Link>
 
           <nav className={`header-nav ${isMenuOpen ? 'mobile-open' : ''}`}>

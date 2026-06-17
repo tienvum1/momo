@@ -31,7 +31,7 @@ const statusLabel = (status) => {
 
 const enrichBooking = (booking) => {
   const createdAt = new Date(booking.created_at);
-  const expiresAt = new Date(createdAt.getTime() + 30 * 60 * 1000);
+  const expiresAt = new Date(createdAt.getTime() + 15 * 60 * 1000);
   return {
     ...booking,
     status_label: statusLabel(booking.status),
@@ -52,15 +52,19 @@ const serializeBigIntAndDecimal = (obj) => {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj === 'bigint') return Number(obj);
   if (typeof obj === 'object') {
+    // Prisma Decimal duck-type: has s, e, d properties and toFixed method
+    if (
+      typeof obj.toFixed === 'function' &&
+      typeof obj.toNumber === 'function'
+    ) {
+      return obj.toNumber();
+    }
+    // Fallback: check constructor name
     if (obj.constructor && obj.constructor.name === 'Decimal') {
       return Number(obj.toString());
     }
-    if (obj instanceof Date) {
-      return obj; // keep Date objects as-is
-    }
-    if (Array.isArray(obj)) {
-      return obj.map(serializeBigIntAndDecimal);
-    }
+    if (obj instanceof Date) return obj;
+    if (Array.isArray(obj)) return obj.map(serializeBigIntAndDecimal);
     const newObj = {};
     for (const key of Object.keys(obj)) {
       newObj[key] = serializeBigIntAndDecimal(obj[key]);
@@ -70,15 +74,15 @@ const serializeBigIntAndDecimal = (obj) => {
   return obj;
 };
 
+
 // ─── Khách tạo đơn ────────────────────────────────────────────────────────────
 const createBooking = async (req, res) => {
   try {
     const customer_id = req.user.id;
-    const { qr_id, customer_bank_name, customer_account_number, customer_account_holder, transfer_amount } = req.body;
+    const { qr_id, customer_account_number, customer_account_holder, transfer_amount } = req.body;
 
     if (!qr_id) return res.status(400).json({ message: "Thiếu qr_id" });
-    if (!customer_bank_name?.trim()) return res.status(400).json({ message: "Vui lòng nhập tên ngân hàng" });
-    if (!customer_account_number?.trim()) return res.status(400).json({ message: "Vui lòng nhập số tài khoản" });
+    if (!customer_account_number?.trim()) return res.status(400).json({ message: "Vui lòng nhập số điện thoại MoMo" });
     if (!customer_account_holder?.trim()) return res.status(400).json({ message: "Vui lòng nhập tên chính chủ" });
 
     const transferAmountNumber = toNumber(transfer_amount);
@@ -132,7 +136,6 @@ const createBooking = async (req, res) => {
         code,
         qr_id: parseInt(qr_id),
         customer_id: parseInt(customer_id),
-        customer_bank_name: String(customer_bank_name).trim(),
         customer_account_number: String(customer_account_number).trim(),
         customer_account_holder: String(customer_account_holder).trim(),
         transfer_amount: transferAmountNumber,
@@ -193,6 +196,31 @@ const submitCustomerPaid = async (req, res) => {
   } catch (err) {
     console.error("Lỗi khi submit bill:", err);
     res.status(500).json({ message: "Lỗi server khi cập nhật thanh toán" });
+  }
+};
+
+// ─── Khách hủy đơn (hết hạn) ─────────────────────────────────────────────────
+const cancelBooking = async (req, res) => {
+  try {
+    const bookingId = parseInt(req.params.id);
+    const customer_id = req.user.id;
+
+    const booking = await prisma.booking.findFirst({
+      where: { id: bookingId, customer_id: parseInt(customer_id) }
+    });
+    if (!booking) return res.status(404).json({ message: "Không tìm thấy đơn" });
+    if (booking.status !== 'created') return res.status(400).json({ message: "Chỉ hủy được đơn chưa thanh toán" });
+
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: 'cancelled' }
+    });
+
+    res.json({ message: "Đã hủy đơn" });
+    cache.del("booking_stats");
+  } catch (err) {
+    console.error("Lỗi cancelBooking:", err);
+    res.status(500).json({ message: "Lỗi server" });
   }
 };
 
@@ -511,6 +539,7 @@ const getAdminStats = async (req, res) => {
 module.exports = {
   createBooking,
   submitCustomerPaid,
+  cancelBooking,
   getMyBookings,
   getMyBookingDetail,
   adminGetBookings,

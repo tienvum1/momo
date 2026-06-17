@@ -1,272 +1,301 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import {
+  ShieldCheck, Zap, Phone, User, CircleDollarSign,
+  QrCode, Lock, BadgePercent, Wallet, Info, X
+} from 'lucide-react';
 import api from '../../api/axios';
 import './QRDetail.scss';
+
+const QUICK_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000];
+
+const fmt = (value) => {
+  const n = Math.round(Number(value));
+  if (!Number.isFinite(n)) return '—';
+  return n.toLocaleString('vi-VN') + 'đ';
+};
 
 const QRDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [qr, setQr] = useState(null);
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Form fields — chỉ cần SĐT MoMo + tên chính chủ + số tiền
   const [momoPhone, setMomoPhone] = useState('');
-  const [accountHolderName, setAccountHolderName] = useState('');
+  const [holderName, setHolderName] = useState('');
   const [amount, setAmount] = useState('');
   const [amountDisplay, setAmountDisplay] = useState('');
-  const [submittingCreate, setSubmittingCreate] = useState(false);
-  const [lightbox, setLightbox] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [lightbox, setLightbox] = useState(false);
 
   useEffect(() => {
     let active = true;
-
     setLoading(true);
-    setError('');
-    setQr(null);
-
-    Promise.all([
-      api.get(`/qrs/ready/${id}`),
-      api.get('/auth/me').catch(() => ({ data: { user: null } })),
-    ]).then(([qrRes, userRes]) => {
-      if (!active) return;
-      setQr(qrRes.data);
-      setUser(userRes.data.user);
-    }).catch((err) => {
-      if (!active) return;
-      setError(err.response?.data?.message || 'Không thể tải chi tiết QR');
-    }).finally(() => {
-      if (!active) return;
-      setLoading(false);
-    });
-
+    api.get(`/qrs/ready/${id}`)
+      .then((res) => { if (active) setQr(res.data); })
+      .catch((err) => { if (active) setError(err.response?.data?.message || 'Không thể tải chi tiết QR'); })
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [id]);
 
   const computed = useMemo(() => {
-    const amountNumber = Number(amount);
-    const maxAmountNumber = Number(qr?.max_amount_per_trans);
-    const isAmountValid = Number.isFinite(amountNumber) && amountNumber > 0;
-    const overLimit = isAmountValid && Number.isFinite(maxAmountNumber) && maxAmountNumber > 0 && amountNumber > maxAmountNumber;
-
+    const num = Number(amount);
+    const isValid = Number.isFinite(num) && num > 0;
+    const max = Number(qr?.max_amount_per_trans ?? 0);
+    const remaining = qr?.daily_remaining != null ? Number(qr.daily_remaining) : null;
+    const effectiveMax = remaining !== null ? Math.min(max, remaining) : max;
+    const overLimit = isValid && effectiveMax > 0 && num > effectiveMax;
     const THRESHOLD = 5_000_000;
-    let feeRateNumber;
-    if (isAmountValid && amountNumber < THRESHOLD) {
-      feeRateNumber = Number(qr?.fee_rate_under ?? qr?.fee_rate ?? 0);
-    } else {
-      feeRateNumber = Number(qr?.fee_rate_over ?? qr?.fee_rate ?? 0);
-    }
-
-    const fee = isAmountValid ? (amountNumber * feeRateNumber) / 100 : 0;
-    const net = isAmountValid ? amountNumber - fee : 0;
-    return { amountNumber, feeRateNumber, maxAmountNumber, isAmountValid, overLimit, fee, net };
+    const feeRate = isValid
+      ? (num < THRESHOLD ? Number(qr?.fee_rate_under ?? qr?.fee_rate ?? 0) : Number(qr?.fee_rate_over ?? qr?.fee_rate ?? 0))
+      : 0;
+    const fee = isValid ? (num * feeRate) / 100 : 0;
+    const net = isValid ? num - fee : 0;
+    return { num, isValid, overLimit, feeRate, fee, net, max, remaining, effectiveMax };
   }, [amount, qr]);
 
-  const formatMoney = (value) => {
-    const n = Math.round(Number(value));
-    if (!Number.isFinite(n)) return '—';
-    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VNĐ';
+  const getEffectiveMax = () => {
+    const max = Number(qr?.max_amount_per_trans ?? 0);
+    const remaining = qr?.daily_remaining != null ? Number(qr.daily_remaining) : null;
+    return remaining !== null ? Math.min(max, remaining) : max;
   };
 
-  const handleCreateOrder = () => {
-    if (!qr) return;
-    if (!momoPhone.trim()) { setError('Vui lòng nhập số điện thoại MoMo'); return; }
-    if (!/^(0[3-9]\d{8})$/.test(momoPhone.trim())) { setError('Số điện thoại không hợp lệ'); return; }
-    if (!accountHolderName.trim()) { setError('Vui lòng nhập tên chính chủ'); return; }
-    if (!computed.isAmountValid) { setError('Vui lòng nhập số tiền hợp lệ'); return; }
-    if (computed.overLimit) { setError('Số tiền vượt quá hạn mức của thẻ QR'); return; }
+  const setQuickAmount = (val) => {
+    const effectiveMax = getEffectiveMax();
+    if (effectiveMax > 0 && val > effectiveMax) return;
+    setAmount(String(val));
+    setAmountDisplay(val.toLocaleString('vi-VN'));
+    setFormError('');
+  };
 
-    setError('');
-    setSubmittingCreate(true);
+  const handleAmountInput = (e) => {
+    const raw = e.target.value.replace(/\D/g, '');
+    const num = Number(raw);
+    const max = Number(qr?.max_amount_per_trans ?? 0);
+    const remaining = qr?.daily_remaining != null ? Number(qr.daily_remaining) : null;
+    const effectiveMax = remaining !== null ? Math.min(max, remaining) : max;
+    if (effectiveMax > 0 && num > effectiveMax) {
+      const label = remaining !== null && remaining < max
+        ? `hạn mức còn lại (${fmt(remaining)})` : `hạn mức giao dịch (${fmt(max)})`;
+      setFormError(`Số tiền vượt quá ${label}`);
+      return;
+    }
+    setFormError('');
+    setAmount(raw);
+    setAmountDisplay(raw ? num.toLocaleString('vi-VN') : '');
+  };
+
+  const handleSubmit = () => {
+    setFormError('');
+    if (!momoPhone.trim()) { setFormError('Vui lòng nhập số điện thoại MoMo'); return; }
+    if (!/^(0[3-9]\d{8})$/.test(momoPhone.trim())) { setFormError('Số điện thoại không hợp lệ'); return; }
+    if (!holderName.trim()) { setFormError('Vui lòng nhập tên chính chủ'); return; }
+    if (!computed.isValid) { setFormError('Vui lòng nhập số tiền hợp lệ'); return; }
+    if (computed.overLimit) {
+      const label = computed.remaining !== null && computed.remaining < computed.max
+        ? `hạn mức còn lại ${fmt(computed.remaining)}` : `hạn mức giao dịch ${fmt(computed.max)}`;
+      setFormError(`Số tiền vượt quá ${label}`); return;
+    }
+    setSubmitting(true);
     api.post('/bookings', {
       qr_id: qr.id,
-      customer_bank_name: 'MoMo',
       customer_account_number: momoPhone.trim(),
-      customer_account_holder: accountHolderName.trim(),
-      transfer_amount: computed.amountNumber,
+      customer_account_holder: holderName.trim(),
+      transfer_amount: computed.num,
     })
-      .then((res) => { navigate(`/payment/${res.data.booking.id}`); })
-      .catch((err) => { setError(err.response?.data?.message || 'Không thể tạo đơn hàng'); })
-      .finally(() => setSubmittingCreate(false));
+      .then((res) => navigate(`/payment/${res.data.booking.id}`))
+      .catch((err) => setFormError(err.response?.data?.message || 'Không thể tạo đơn'))
+      .finally(() => setSubmitting(false));
   };
 
-  if (loading) return <div className="qr-detail-loading">Đang tải...</div>;
+  if (loading) return <div className="qrd-loading">Đang tải...</div>;
+  if (!qr) return (
+    <div className="qrd-error">
+      <p>{error || 'Không tìm thấy QR hoặc đang bảo trì.'}</p>
+      <Link to="/">← Trang chủ</Link>
+    </div>
+  );
 
-  if (!qr) {
-    return (
-      <div className="qr-detail-error">
-        <h1>Không tìm thấy thẻ QR</h1>
-        <p>{error || 'Thẻ QR không tồn tại hoặc đang bảo trì.'}</p>
-        <Link to="/" className="back-link">Quay về Trang chủ</Link>
-      </div>
-    );
-  }
-
-  const feeRateUnder = Number(qr.fee_rate_under ?? qr.fee_rate ?? 0);
-  const feeRateOver  = Number(qr.fee_rate_over  ?? qr.fee_rate ?? 0);
-  const dailyRemaining = qr.daily_remaining != null ? Math.round(Number(qr.daily_remaining)) : null;
+  const feeUnder  = Number(qr.fee_rate_under ?? qr.fee_rate ?? 0);
+  const feeOver   = Number(qr.fee_rate_over  ?? qr.fee_rate ?? 0);
+  const maxAmt    = Math.round(Number(qr.max_amount_per_trans));
+  const remaining = qr.daily_remaining != null ? Math.round(Number(qr.daily_remaining)) : null;
 
   return (
-    <div className="qr-detail-page">
-      <div className="qr-detail-top">
-        <Link to="/" className="back-link">← Trang chủ</Link>
-        <div className={`qr-status ${qr.status}`}>
-          {qr.status === 'ready' ? 'Sẵn sàng' : 'Bảo trì'}
-        </div>
-      </div>
+    <div className="qrd-page">
+      <div className="qrd-layout">
 
-      {/* Layout 50/50 */}
-      <div className="qr-main-layout">
+        {/* ── LEFT ── */}
+        <div className="qrd-left">
+          <div className="qrd-card">
+            <Link to="/" className="qrd-back">← Trang chủ</Link>
 
-        {/* ── Thông tin QR bên trái ── */}
-        <div className="qr-info-card">
-          <div className="qr-info-images">
-            {qr.main_image && (
-              <div className="qr-info-img-wrap" onClick={() => setLightbox(qr.main_image)}>
-                <img src={qr.main_image} alt="QR đại diện" />
-                <span className="img-label">Thông tin thẻ QR</span>
-              </div>
-            )}
-          </div>
-
-          <div className="qr-info-details">
-            <h2 className="qr-info-name">{qr.name || `QR #${qr.id}`}</h2>
-
-            <div className="qr-info-cards-row">
-              {/* Card phí */}
-              <div className="qr-stat-card">
-                <div className="qr-stat-card-header">
-                  <div className="qr-stat-icon fee-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.93V18h-2v-1.07C9.39 16.57 8 15.4 8 14h2c0 .55.9 1 2 1s2-.45 2-1c0-.61-.55-.86-2.05-1.27-2.04-.54-3.95-1.18-3.95-3.23 0-1.57 1.39-2.7 3-3.07V5h2v1.43c1.61.37 3 1.5 3 3.07h-2c0-.55-.9-1-2-1s-2 .45-2 1c0 .61.55.86 2.05 1.27 2.04.54 3.95 1.18 3.95 3.23 0 1.57-1.39 2.7-3 3.93z"/>
-                    </svg>
-                  </div>
-                  <span className="qr-stat-card-title">PHÍ GIAO DỊCH</span>
-                </div>
-                <div className="qr-stat-card-body">
-                  <div className="fee-row">
-                    <span className="fee-label">Dưới 5.000.000đ</span>
-                    <span className="fee-value">{feeRateUnder}%</span>
-                  </div>
-                  <div className="fee-divider" />
-                  <div className="fee-row">
-                    <span className="fee-label">Trên 5.000.000đ</span>
-                    <span className="fee-value">{feeRateOver}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card hạn mức */}
-              <div className="qr-stat-card">
-                <div className="qr-stat-card-header">
-                  <div className="qr-stat-icon limit-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
-                    </svg>
-                  </div>
-                  <span className="qr-stat-card-title">HẠN MỨC</span>
-                </div>
-                <div className="qr-stat-card-body">
-                  <div className="limit-row">
-                    <span className="limit-label">Tối đa / lần chuyển</span>
-                    <span className="limit-value">{Math.round(Number(qr.max_amount_per_trans)).toLocaleString('vi-VN')}đ</span>
-                  </div>
-                  {dailyRemaining !== null && (
-                    <>
-                      <div className="fee-divider" />
-                      <div className="limit-row">
-                        <span className="limit-label">Hạn mức còn lại</span>
-                        <span className="limit-value">{dailyRemaining.toLocaleString('vi-VN')}đ</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
+            {/* Header */}
+            <div className="qrd-card-header">
+              <div className="qrd-card-name">{qr.name || `QR #${qr.id}`}</div>
+              <div className="qrd-card-sub">Thanh toán an toàn – Nhận tiền tức thì</div>
             </div>
-          </div>
-        </div>
 
-        {/* ── Form tạo đơn bên phải ── */}
-        <div className="qr-detail-grid">
-          <section className="order-panel">
-            <h1>Tạo đơn</h1>
-            <div className="order-form">
+            {/* QR image */}
+            <div className="qrd-qr-wrap" onClick={() => setLightbox(true)}>
+              <img src={qr.main_image} alt="QR" className="qrd-qr-img" />
+            </div>
 
-              {/* Số điện thoại MoMo */}
-              <label className="field">
-                <span>Số điện thoại MoMo</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={momoPhone}
-                  onChange={(e) => setMomoPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  placeholder="VD: 0901234567"
-                />
-              </label>
+            {/* Info box */}
+            <div className="qrd-info-box">
+              <div className="qrd-info-title">
+                <Info size={14} /> Thông tin giao dịch
+              </div>
 
-              {/* Tên chính chủ */}
-              <label className="field">
-                <span>Tên chính chủ</span>
-                <input
-                  type="text"
-                  value={accountHolderName}
-                  onChange={(e) => setAccountHolderName(e.target.value)}
-                  placeholder="Nhập họ tên đầy đủ"
-                />
-              </label>
+              <div className="qrd-info-section-label">
+                <BadgePercent size={14} /> Phí giao dịch
+              </div>
+              <div className="qrd-fee-list">
+                <div className="qrd-fee-item">
+                  <span>Dưới 5.000.000đ</span>
+                  <span className="qrd-fee-val">{feeUnder}%</span>
+                </div>
+                <div className="qrd-fee-item">
+                  <span>Trên 5.000.000đ</span>
+                  <span className="qrd-fee-val">{feeOver}%</span>
+                </div>
+              </div>
 
-              {/* Số tiền */}
-              <label className="field">
-                <span>Số tiền chuyển (VNĐ)</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={amountDisplay}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '');
-                    setAmount(val);
-                    setAmountDisplay(val.replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
-                  }}
-                  placeholder="Nhập số tiền"
-                />
-              </label>
-
-              {computed.maxAmountNumber > 0 && (
-                <div className="order-hint">
-                  Giới hạn 1 lần: {Math.round(computed.maxAmountNumber).toLocaleString('vi-VN')} VNĐ
+              <div className="qrd-info-row space-top">
+                <span className="qrd-info-label"><Wallet size={13} /> Hạn mức giao dịch</span>
+                <span className="qrd-info-value">{fmt(maxAmt)}</span>
+              </div>
+              {remaining !== null && (
+                <div className="qrd-info-row">
+                  <span className="qrd-info-label"><Zap size={13} /> Hạn mức còn lại</span>
+                  <span className="qrd-info-value">{fmt(remaining)}</span>
                 </div>
               )}
-
-              {/* Tóm tắt phí */}
-              <div className="order-summary">
-                <div className="row">
-                  <span>Phí ({computed.feeRateNumber}%)</span>
-                  <span>{formatMoney(computed.fee)}</span>
-                </div>
-                <div className="row total">
-                  <span>Nhận được</span>
-                  <span>{formatMoney(computed.net)}</span>
-                </div>
-              </div>
-
-              {error && <div className="order-error">{error}</div>}
-
-              <button type="button" className="create-btn" onClick={handleCreateOrder} disabled={submittingCreate}>
-                {submittingCreate ? 'Đang tạo...' : 'Tạo đơn'}
-              </button>
             </div>
-          </section>
+
+            <div className="qrd-trust">
+              <ShieldCheck size={13} />
+              MoMo được Ngân hàng Nhà nước cấp phép và bảo trợ bởi các ngân hàng uy tín.
+            </div>
+          </div>
         </div>
 
-      </div>{/* end qr-main-layout */}
+        {/* ── RIGHT ── */}
+        <div className="qrd-right">
+          <div className="qrd-form-card">
+            <h1 className="qrd-form-title">
+              <span className="qrd-title-bar" />
+              Tạo đơn thanh toán
+            </h1>
+            <p className="qrd-form-sub">Tạo QR để khách hàng quét mã thanh toán</p>
+
+            {/* Phone */}
+            <div className="qrd-field">
+              <label>Số điện thoại MoMo <span className="req">*</span></label>
+              <div className="qrd-input-wrap">
+                <Phone size={17} className="qrd-input-icon" />
+                <input
+                  type="text" inputMode="numeric"
+                  placeholder="Nhập số điện thoại MoMo"
+                  value={momoPhone}
+                  onChange={(e) => setMomoPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                />
+              </div>
+            </div>
+
+            {/* Name */}
+            <div className="qrd-field">
+              <label>Tên chính chủ <span className="req">*</span></label>
+              <div className="qrd-input-wrap">
+                <User size={17} className="qrd-input-icon" />
+                <input
+                  type="text"
+                  placeholder="Nhập họ tên đầy đủ"
+                  value={holderName}
+                  onChange={(e) => setHolderName(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Amount */}
+            <div className="qrd-field">
+              <label>Số tiền cần nhận (VND) <span className="req">*</span></label>
+              <div className="qrd-input-wrap">
+                <CircleDollarSign size={17} className="qrd-input-icon" />
+                <input
+                  type="text" inputMode="numeric"
+                  placeholder="Nhập số tiền"
+                  value={amountDisplay}
+                  onChange={handleAmountInput}
+                />
+                <span className="qrd-input-suffix">đ</span>
+              </div>
+
+              <div className="qrd-quick-amounts">
+                {QUICK_AMOUNTS.map((val) => (
+                  <button
+                    key={val} type="button"
+                    className={`qrd-quick-btn ${Number(amount) === val ? 'active' : ''}`}
+                    onClick={() => setQuickAmount(val)}
+                  >
+                    {val.toLocaleString('vi-VN')}đ
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Summary */}
+            {computed.isValid && (
+              <div className="qrd-summary">
+                <div className="qrd-summary-row">
+                  <span>Số tiền khách chuyển</span>
+                  <span className="qrd-summary-plain">{fmt(computed.num)}</span>
+                </div>
+                <div className="qrd-summary-row">
+                  <span>Phí giao dịch ({computed.feeRate}%)</span>
+                  <span className="qrd-summary-fee">{fmt(computed.fee)}</span>
+                </div>
+                <div className="qrd-summary-divider" />
+                <div className="qrd-summary-row total">
+                  <span>Bạn sẽ nhận được</span>
+                  <span className="qrd-summary-net">{fmt(computed.net)}</span>
+                </div>
+              </div>
+            )}
+
+            {formError && (
+              <div className="qrd-error-msg">
+                <X size={14} /> {formError}
+              </div>
+            )}
+
+            <p className="qrd-fee-note">
+              <ShieldCheck size={13} />
+              Phí giao dịch sẽ được trừ tự động khi khách hàng thanh toán thành công.
+            </p>
+
+            <button className="qrd-submit-btn" onClick={handleSubmit} disabled={submitting}>
+              <QrCode size={20} />
+              {submitting ? 'Đang tạo...' : 'Tạo QR nhận tiền'}
+            </button>
+
+            <p className="qrd-secure-note">
+              <Lock size={13} />
+              Thông tin của bạn được bảo mật tuyệt đối
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Lightbox */}
       {lightbox && (
-        <div className="qr-lightbox" onClick={() => setLightbox(null)}>
-          <div className="qr-lightbox-inner" onClick={e => e.stopPropagation()}>
-            <button className="qr-lightbox-close" onClick={() => setLightbox(null)}>×</button>
-            <img src={lightbox} alt="Preview" />
+        <div className="qrd-lightbox" onClick={() => setLightbox(false)}>
+          <div className="qrd-lightbox-inner" onClick={(e) => e.stopPropagation()}>
+            <button className="qrd-lightbox-close" onClick={() => setLightbox(false)}>×</button>
+            <img src={qr.main_image} alt="QR" />
           </div>
         </div>
       )}

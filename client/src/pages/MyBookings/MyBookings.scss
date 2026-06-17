@@ -1,663 +1,372 @@
-.my-bookings-page {
+$pink: #d82d8b;
+$pink-light: #fdf2f8;
+$dark: #1e293b;
+$gray: #64748b;
+
+.mb-page {
   padding: 24px;
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  min-height: 100vh;
   background: #f8fafc;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  box-sizing: border-box;
+  gap: 20px;
+  text-align: left;
 
   @media (max-width: 768px) {
     padding: 12px;
-    gap: 16px;
-  }
-
-  &.full-width {
-    max-width: 100%;
-
-    // Loading Skeleton
-    .loading-skeleton {
-      padding: 20px;
-
-      .skeleton-item {
-        height: 60px;
-        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-        background-size: 200% 100%;
-        animation: skeleton-loading 1.5s infinite;
-        border-radius: 12px;
-        margin-bottom: 12px;
-      }
-    }
-
-    @keyframes skeleton-loading {
-      0% {
-        background-position: 200% 0;
-      }
-
-      100% {
-        background-position: -200% 0;
-      }
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #94a3b8;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-
-      svg {
-        color: #cbd5e1;
-      }
-
-      p {
-        font-size: 15px;
-        font-weight: 500;
-      }
-    }
-  }
-
-  // Header Section
-  .my-bookings-header {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    padding: 24px;
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e2e8f0;
-
-    @media (max-width: 992px) {
-      flex-direction: column;
-      align-items: stretch;
-      padding: 16px;
-      gap: 16px;
-    }
-
-    .header-title {
-      text-align: left;
-
-      h1 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: 800;
-        color: #0f172a;
-
-        @media (max-width: 768px) {
-          font-size: 20px;
-        }
-      }
-
-      p {
-        margin: 4px 0 0;
-        font-size: 14px;
-        color: #64748b;
-
-        @media (max-width: 768px) {
-          font-size: 13px;
-        }
-      }
-    }
-
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-
-      @media (max-width: 992px) {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .search {
-        @media (max-width: 992px) {
-          width: 100%;
-        }
-
-        input {
-          width: 250px;
-          padding: 10px 16px;
-          border-radius: 10px;
-          border: 1px solid #e2e8f0;
-          outline: none;
-          font-size: 14px;
-          transition: all 0.2s;
-
-          @media (max-width: 992px) {
-            width: 100%;
-          }
-
-          &:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-          }
-        }
-      }
-
-      .filters-group {
-        display: flex;
-        gap: 12px;
-
-        @media (max-width: 768px) {
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        select {
-          min-width: 160px;
-          padding: 10px 16px;
-          border-radius: 10px;
-          border: 1px solid #e2e8f0;
-          background: #ffffff;
-          outline: none;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-
-          @media (max-width: 768px) {
-            min-width: 0;
-            width: 100%;
-          }
-
-          &:focus {
-            border-color: #6366f1;
-          }
-        }
-      }
-    }
-  }
-
-  // Stats Grid
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
-
-    @media (max-width: 1400px) {
-      grid-template-columns: repeat(4, 1fr);
-    }
-
-    @media (max-width: 992px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    @media (max-width: 480px) {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 4px; // Reduced from 8px
-    }
-
-    .stat-card {
-      background: #ffffff;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      transition: transform 0.2s, box-shadow 0.2s;
-
-      @media (max-width: 768px) {
-        padding: 6px 8px; // Reduced from 10px
-
-        &.total {
-          grid-column: span 2;
-        }
-      }
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 12px -3px rgba(0, 0, 0, 0.08);
-      }
-
-      .stat-info {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-        text-align: left;
-
-        .label {
-          font-size: 10px;
-          font-weight: 700;
-          color: #64748b;
-          text-transform: uppercase;
-          letter-spacing: 0.025em;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-
-          @media (max-width: 768px) {
-            font-size: 9px;
-          }
-        }
-
-        .value {
-          font-size: 15px;
-          font-weight: 800;
-          color: #0f172a;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-
-          @media (max-width: 768px) {
-            font-size: 14px;
-          }
-        }
-      }
-    }
-  }
-
-  // Visibility helpers
-  .desktop-only {
-    @media (max-width: 768px) {
-      display: none !important;
-    }
-  }
-
-  .mobile-only {
-    display: none !important;
-
-    @media (max-width: 768px) {
-      display: block !important;
-    }
-  }
-
-  // Table Section
-  .table-container {
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    overflow-x: auto;
-
-    .booking-table {
-      width: 100%;
-      border-collapse: collapse;
-
-      th {
-        background: #f8fafc;
-        padding: 16px 20px;
-        text-align: left;
-        font-size: 12px;
-        font-weight: 700;
-        color: #64748b;
-        text-transform: uppercase;
-        border-bottom: 1px solid #e2e8f0;
-        white-space: nowrap;
-      }
-
-      td {
-        padding: 16px 20px;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: middle;
-        text-align: left;
-      }
-
-      tr:last-child td {
-        border-bottom: none;
-      }
-
-      tr:hover td {
-        background: #f8fafc;
-      }
-
-      .code-cell {
-        display: flex;
-        flex-direction: column;
-
-        .code-id {
-          font-size: 12px;
-          color: #64748b;
-        }
-
-        .code-hash {
-          font-family: monospace;
-          font-weight: 700;
-          color: #0f172a;
-        }
-      }
-
-      .bank-cell {
-        display: flex;
-        flex-direction: column;
-
-        .bank-name {
-          font-weight: 700;
-          color: #0f172a;
-        }
-
-        .account-number {
-          font-family: monospace;
-          color: #000000;
-          font-size: 13px;
-        }
-
-        .account-holder {
-          font-size: 12px;
-          color: #64748b;
-          text-transform: uppercase;
-        }
-      }
-
-      .amount-cell {
-        display: flex;
-        flex-direction: column;
-
-        .transfer-amount {
-          font-weight: 800;
-          color: #0f172a;
-          font-size: 15px;
-        }
-
-        .net-amount {
-          font-size: 12px;
-          color: #10b981;
-          font-weight: 600;
-        }
-      }
-
-      .time-cell {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-
-        .time-label {
-          font-size: 12px;
-          color: #64748b;
-        }
-      }
-
-      .status-text {
-        font-size: 11px;
-        font-weight: 800;
-        text-transform: uppercase;
-        display: inline-block;
-        letter-spacing: 0.05em;
-
-        &.created {
-          color: #64748b;
-        }
-
-        &.paid {
-          color: #d97706; // Yellow/Amber
-        }
-
-        &.completed {
-          color: #16a34a; // Green
-        }
-
-        &.rejected,
-        &.cancelled {
-          color: #dc2626; // Red
-        }
-      }
-
-      .detail-btn {
-        padding: 10px 20px;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        font-size: 13px;
-        font-weight: 700;
-        color: #1b3591;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-
-        &:hover {
-          background: #4f46e5;
-          color: #ffffff;
-          border-color: #4f46e5;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
-        }
-
-        &:active {
-          transform: translateY(0);
-        }
-      }
-
-      .pay-btn {
-        padding: 10px 20px;
-        background: #f59e0b;
-        border: none;
-        border-radius: 12px;
-        font-size: 13px;
-        font-weight: 700;
-        color: #ffffff;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-
-        &:hover {
-          background: #d97706;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-        }
-
-        &:active {
-          transform: translateY(0);
-        }
-      }
-
-      // Wrap multiple action buttons
-      td[data-label="Thao tác"] {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-    }
-  }
-
-  // Mobile Card List
-  .booking-mobile-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px; // Reduced from 12px
-    margin-bottom: 24px;
-
-    .empty {
-      padding: 40px;
-      text-align: center;
-      background: white;
-      border-radius: 12px;
-      color: #64748b;
-      border: 1px solid #e2e8f0;
-    }
-
-    .booking-mobile-card {
-      background: white;
-      padding: 8px 12px; // Reduced from 16px
-      display: flex;
-      flex-direction: column;
-      gap: 6px; // Reduced from 12px
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-
-      .card-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .date {
-          font-size: 11px; // Smaller
-          color: #94a3b8;
-          font-weight: 500;
-        }
-
-        .amount {
-          font-size: 14px; // Smaller
-          font-weight: 800;
-          color: #0f172a;
-        }
-      }
-
-      .card-middle {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0; // Removed padding
-
-        .code {
-          font-family: monospace;
-          font-weight: 700;
-          font-size: 14px;
-          color: #4f46e5;
-          background: #eef2ff;
-          padding: 2px 8px;
-          border-radius: 4px;
-        }
-
-        .validation-mobile {
-          font-size: 13px;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-
-          .label {
-            color: #64748b;
-          }
-
-          .valid-yes {
-            color: #15803d;
-            font-weight: 700;
-          }
-
-          .valid-no {
-            color: #dc2626;
-            font-weight: 700;
-          }
-
-          .valid-none {
-            color: #cbd5e1;
-          }
-        }
-      }
-
-      .card-bottom {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .card-actions {
-          display: flex;
-          gap: 8px;
-
-          button {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-          }
-
-          .pay-btn-mobile {
-            background: #f59e0b;
-            color: white;
-          }
-
-          .detail-btn-mobile {
-            background: #f1f5f9;
-            color: #475569;
-            border: 1px solid #e2e8f0;
-          }
-        }
-      }
-    }
-  }
-
-  .status-badge-wrapper {
-    .status-text {
-      font-size: 11px;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 20px;
-      text-transform: uppercase;
-
-      &.created {
-        background: #f1f5f9;
-        color: #475569;
-      }
-
-      &.paid {
-        background: #fffbeb;
-        color: #b45309;
-      }
-
-      &.completed {
-        background: #f0fdf4;
-        color: #16a34a;
-      }
-
-      &.rejected,
-      &.cancelled {
-        background: #fef2f2;
-        color: #dc2626;
-      }
-    }
+    gap: 14px;
   }
 }
 
-// Global Utilities
-.text-right {
-  text-align: right;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.py-8 {
-  padding: 32px 0;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.valid-badge {
-  display: inline-flex;
+// ── Header ────────────────────────────────────────────────────────────────────
+.mb-header {
+  display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 24px;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: $dark;
+  }
+
+  p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: $gray;
+  }
+}
+
+.mb-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $dark;
+    background: white;
+    cursor: pointer;
+    outline: none;
+
+    &:focus {
+      border-color: $pink;
+    }
+  }
+}
+
+.mb-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  svg {
+    position: absolute;
+    left: 10px;
+    color: #94a3b8;
+  }
+
+  input {
+    padding: 8px 12px 8px 32px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    width: 220px;
+    outline: none;
+
+    &:focus {
+      border-color: $pink;
+      box-shadow: 0 0 0 3px rgba(216, 45, 139, 0.08);
+    }
+  }
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+.mb-table-wrap {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow-x: auto;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.mb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  thead th {
+    background: #f8fafc;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: $gray;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    color: $dark;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover td {
+    background: #fdf8fc;
+  }
+
+  .mb-empty {
+    padding: 48px;
+    text-align: center;
+    color: $gray;
+  }
+}
+
+// Cell styles
+.mb-code {
+  font-family: monospace;
+  font-weight: 700;
+  color: $pink;
+  font-size: 13px;
+}
+
+.mb-mono {
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.mb-amount {
+  font-weight: 700;
+  color: $dark;
+}
+
+.mb-fee {
+  color: $gray;
+}
+
+.mb-net {
+  font-weight: 800;
+  color: #16a34a;
+}
+
+.mb-date {
+  font-size: 12px;
+  color: $gray;
+  white-space: nowrap;
+}
+
+// Status badge
+.mb-status {
+  display: inline-block;
   padding: 3px 10px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
 
-  &.yes {
-    background: #f0fdf4;
-    color: #15803d;
-    border: 1px solid #bbf7d0;
+  &.created {
+    background: #f1f5f9;
+    color: #475569;
   }
 
-  &.no {
+  &.paid {
+    background: #fffbeb;
+    color: #b45309;
+  }
+
+  &.completed {
+    background: #f0fdf4;
+    color: #16a34a;
+  }
+
+  &.rejected,
+  &.cancelled {
     background: #fef2f2;
     color: #dc2626;
-    border: 1px solid #fecaca;
+  }
+}
+
+// Action buttons
+.mb-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.mb-btn-pay {
+  padding: 6px 14px;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+  }
+}
+
+.mb-btn-detail {
+  padding: 6px 14px;
+  background: $pink-light;
+  color: $pink;
+  border: 1px solid #f0d6e8;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background: $pink;
+    color: white;
+    border-color: $pink;
+  }
+}
+
+// ── Mobile cards ──────────────────────────────────────────────────────────────
+.mb-cards {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+}
+
+.mb-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mb-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+
+  &.top {
+    margin-bottom: 4px;
+  }
+}
+
+.mb-card-label {
+  font-size: 12px;
+  color: $gray;
+  font-weight: 500;
+}
+
+.mb-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+
+  button {
+    flex: 1;
+  }
+}
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+.mb-skeleton {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  div {
+    height: 48px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: mb-shimmer 1.5s infinite;
+  }
+}
+
+@keyframes mb-shimmer {
+  0% {
+    background-position: 200% 0;
   }
 
-  &.none {
-    color: #94a3b8;
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+.mb-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+
+  button {
+    min-width: 32px;
+    height: 32px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: $gray;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) {
+      border-color: $pink;
+      color: $pink;
+    }
+
+    &.active {
+      background: $pink;
+      border-color: $pink;
+      color: white;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  span {
+    color: $gray;
+    font-size: 13px;
+    padding: 0 4px;
   }
 }

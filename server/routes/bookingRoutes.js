@@ -9,6 +9,7 @@ const {
   submitCustomerPaid,
   getMyBookings,
   getMyBookingDetail,
+  cancelBooking,
   adminGetBookings,
   adminGetBookingDetail,
   adminConfirmBooking,
@@ -25,6 +26,7 @@ const upload = multer({
 router.post("/", protect, createBooking);
 router.get("/my", protect, getMyBookings);
 router.get("/my/:id", protect, getMyBookingDetail);
+router.patch("/:id/cancel", protect, cancelBooking);
 router.post(
   "/:id/customer-paid",
   protect,
