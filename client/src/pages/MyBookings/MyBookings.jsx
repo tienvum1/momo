@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Receipt } from 'lucide-react';
 import api from '../../api/axios';
 import './MyBookings.scss';
 
@@ -36,14 +36,14 @@ const shortCode = (code) => String(code || '').slice(-6);
 
 const MyBookings = () => {
   const navigate = useNavigate();
-  const [bookings, setBookings]       = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [search, setSearch]           = useState('');
-  const [statusFilter, setStatus]     = useState('all');
-  const [dateFilter, setDate]         = useState('all');
-  const [currentPage, setPage]        = useState(1);
-  const [totalPages, setTotalPages]   = useState(0);
-  const [total, setTotal]             = useState(0);
+  const [bookings, setBookings]     = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [search, setSearch]         = useState('');
+  const [statusFilter, setStatus]   = useState('all');
+  const [dateFilter, setDate]       = useState('all');
+  const [currentPage, setPage]      = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [total, setTotal]           = useState(0);
   const PER_PAGE = 15;
 
   const load = useCallback(async () => {
@@ -80,26 +80,51 @@ const MyBookings = () => {
     for (let i = start; i <= end; i++) pages.push(i);
     return (
       <div className="mb-pagination">
-        <button disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>Trước</button>
-        {start > 1 && <><button onClick={() => changePage(1)}>1</button>{start > 2 && <span>...</span>}</>}
-        {pages.map(p => <button key={p} className={currentPage === p ? 'active' : ''} onClick={() => changePage(p)}>{p}</button>)}
-        {end < totalPages && <>{end < totalPages - 1 && <span>...</span>}<button onClick={() => changePage(totalPages)}>{totalPages}</button></>}
-        <button disabled={currentPage === totalPages} onClick={() => changePage(currentPage + 1)}>Sau</button>
+        <button disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>←</button>
+        {start > 1 && (
+          <>
+            <button onClick={() => changePage(1)}>1</button>
+            {start > 2 && <span>…</span>}
+          </>
+        )}
+        {pages.map(p => (
+          <button key={p} className={currentPage === p ? 'active' : ''} onClick={() => changePage(p)}>
+            {p}
+          </button>
+        ))}
+        {end < totalPages && (
+          <>
+            {end < totalPages - 1 && <span>…</span>}
+            <button onClick={() => changePage(totalPages)}>{totalPages}</button>
+          </>
+        )}
+        <button disabled={currentPage === totalPages} onClick={() => changePage(currentPage + 1)}>→</button>
       </div>
     );
   };
 
+  const EmptyState = () => (
+    <div className="mb-empty-state">
+      <div className="mb-empty-icon">
+        <Receipt size={40} strokeWidth={1.5} color="#d0d5dd" />
+      </div>
+      <p>Không tìm thấy đơn hàng nào</p>
+      <p>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+    </div>
+  );
+
   return (
     <div className="mb-page">
-      {/* Header */}
+
+      {/* ── Header ── */}
       <div className="mb-header">
         <div className="mb-header-left">
           <h1>Đơn của tôi</h1>
-          <p>Lịch sử giao dịch của bạn · {total} đơn</p>
+          <p>Lịch sử giao dịch · {total} đơn</p>
         </div>
         <div className="mb-controls">
           <div className="mb-search">
-            <Search size={15} />
+            <Search size={14} />
             <input
               placeholder="Tìm theo mã đơn..."
               value={search}
@@ -120,7 +145,7 @@ const MyBookings = () => {
         </div>
       </div>
 
-      {/* Table */}
+      {/* ── Desktop Table ── */}
       <div className="mb-table-wrap">
         <table className="mb-table">
           <thead>
@@ -139,11 +164,17 @@ const MyBookings = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={10} className="mb-empty">
-                <div className="mb-skeleton">{[...Array(5)].map((_, i) => <div key={i} />)}</div>
-              </td></tr>
+              <tr>
+                <td colSpan={10}>
+                  <div className="mb-skeleton">
+                    {[...Array(6)].map((_, i) => <div key={i} />)}
+                  </div>
+                </td>
+              </tr>
             ) : bookings.length === 0 ? (
-              <tr><td colSpan={10} className="mb-empty">Không tìm thấy đơn hàng nào.</td></tr>
+              <tr>
+                <td colSpan={10}><EmptyState /></td>
+              </tr>
             ) : bookings.map(b => {
               const st = STATUS_MAP[b.status] || { label: b.status, cls: '' };
               return (
@@ -160,9 +191,13 @@ const MyBookings = () => {
                   <td>
                     <div className="mb-actions">
                       {b.status === 'created' && (
-                        <button className="mb-btn-pay" onClick={() => navigate(`/payment/${b.id}`)}>Thanh toán</button>
+                        <button className="mb-btn-pay" onClick={() => navigate(`/payment/${b.id}`)}>
+                          Thanh toán
+                        </button>
                       )}
-                      <button className="mb-btn-detail" onClick={() => navigate(`/my-bookings/${b.id}`)}>Chi tiết</button>
+                      <button className="mb-btn-detail" onClick={() => navigate(`/my-bookings/${b.id}`)}>
+                        Chi tiết
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -172,12 +207,14 @@ const MyBookings = () => {
         </table>
       </div>
 
-      {/* Mobile cards */}
+      {/* ── Mobile cards ── */}
       <div className="mb-cards">
         {loading ? (
           <div className="mb-skeleton">{[...Array(4)].map((_, i) => <div key={i} />)}</div>
         ) : bookings.length === 0 ? (
-          <div className="mb-empty">Không có đơn hàng.</div>
+          <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e8ecf0' }}>
+            <EmptyState />
+          </div>
         ) : bookings.map(b => {
           const st = STATUS_MAP[b.status] || { label: b.status, cls: '' };
           return (
@@ -186,10 +223,12 @@ const MyBookings = () => {
                 <span className="mb-code">#{shortCode(b.code)}</span>
                 <span className={`mb-status ${st.cls}`}>{st.label}</span>
               </div>
-              <div className="mb-card-row">
-                <span className="mb-card-label">QR</span>
-                <span>{b.qr_name || '—'}</span>
-              </div>
+              {b.qr_name && (
+                <div className="mb-card-row">
+                  <span className="mb-card-label">QR</span>
+                  <span style={{ fontWeight: 600, color: '#1e293b' }}>{b.qr_name}</span>
+                </div>
+              )}
               <div className="mb-card-row">
                 <span className="mb-card-label">SĐT MoMo</span>
                 <span className="mb-mono">{b.customer_account_number || '—'}</span>
@@ -208,9 +247,13 @@ const MyBookings = () => {
               </div>
               <div className="mb-card-actions">
                 {b.status === 'created' && (
-                  <button className="mb-btn-pay" onClick={() => navigate(`/payment/${b.id}`)}>Thanh toán</button>
+                  <button className="mb-btn-pay" onClick={() => navigate(`/payment/${b.id}`)}>
+                    Thanh toán
+                  </button>
                 )}
-                <button className="mb-btn-detail" onClick={() => navigate(`/my-bookings/${b.id}`)}>Chi tiết</button>
+                <button className="mb-btn-detail" onClick={() => navigate(`/my-bookings/${b.id}`)}>
+                  Chi tiết
+                </button>
               </div>
             </div>
           );

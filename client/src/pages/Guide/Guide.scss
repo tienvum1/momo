@@ -1,0 +1,677 @@
+// ── Design tokens ─────────────────────────────────────────────────────────────
+$p: #ec4899;
+$pd: #db2777;
+$p10: #fdf2f8;
+$p20: #fce7f3;
+$pbd: #fbcfe8;
+$dark: #1e293b;
+$body: #374151;
+$mid: #64748b;
+$mut: #94a3b8;
+$bdr: #f1f5f9;
+$bmd: #e2e8f0;
+$bg: #f8fafc;
+$card: #ffffff;
+$r: 12px;
+$sh: 0 1px 4px rgba(0, 0, 0, .06), 0 0 0 1px rgba(0, 0, 0, .03);
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+.gd-page {
+  background: #fff;
+  min-height: calc(100vh - 60px);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: $body;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+// ── Hero ──────────────────────────────────────────────────────────────────────
+.gd-hero {
+  text-align: center;
+  padding: 28px 24px 20px;
+  background: #fff;
+  border-bottom: 1px solid $bdr;
+  flex-shrink: 0;
+}
+
+.gd-h1 {
+  font-size: 28px;
+  font-weight: 900;
+  color: $dark;
+  margin: 0 0 6px;
+  letter-spacing: -.03em;
+
+  em {
+    font-style: normal;
+    color: $p;
+  }
+
+  @media (max-width: 640px) {
+    font-size: 22px;
+  }
+}
+
+.gd-sub {
+  font-size: 14px;
+  color: $mut;
+  margin: 0 0 20px;
+}
+
+// step bar
+.gd-stepbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.gd-arrow {
+  color: $p;
+  flex-shrink: 0;
+}
+
+.gd-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff;
+  border: 1.5px solid $bdr;
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-width: 220px;
+  max-width: 260px;
+  flex: 1;
+  box-shadow: $sh;
+  text-align: left;
+}
+
+.gd-step-dot {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: $p;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(236, 72, 153, .35);
+}
+
+.gd-step-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  strong {
+    font-size: 13px;
+    font-weight: 800;
+    color: $dark;
+    display: block;
+  }
+
+  span {
+    font-size: 11px;
+    color: $mut;
+    line-height: 1.45;
+    display: block;
+  }
+}
+
+// ── Grid ──────────────────────────────────────────────────────────────────────
+.gd-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 20px 32px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  flex: 1;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+    padding: 14px 12px;
+  }
+}
+
+// ── Card ──────────────────────────────────────────────────────────────────────
+.gd-card {
+  background: $card;
+  border: 1px solid $bmd;
+  border-radius: $r;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.gd-card-hd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-bottom: 1px solid $bdr;
+  background: #fff;
+}
+
+.gd-badge {
+  background: $p;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 5px;
+  letter-spacing: .05em;
+  flex-shrink: 0;
+}
+
+.gd-card-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: $dark;
+}
+
+// ══ CARD 1 ════════════════════════════════════════════════════════════════════
+.gd-c1 {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+// QR frame — no top label, image full width
+.gd-qr-frame {
+  border: 1.5px solid $bmd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: $p10;
+}
+
+.gd-qr-img {
+  width: 100%;
+  display: block;
+  max-height: 150px;
+  object-fit: contain;
+  background: $p10;
+}
+
+.gd-qr-frame-name {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: $dark;
+  padding: 6px;
+  background: #fff;
+  border-top: 1px solid $bdr;
+}
+
+// fee + limit boxes
+.gd-boxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.gd-box {
+  background: $p10;
+  border: 1.5px solid $pbd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.gd-box-hd {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding-bottom: 5px;
+  border-bottom: 1px solid $pbd;
+
+  &.pink {
+    color: $p;
+
+    svg {
+      color: $p;
+    }
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.gd-box-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: $body;
+
+  b {
+    color: $p;
+    font-weight: 800;
+    font-size: 12px;
+  }
+}
+
+.gd-box-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  span {
+    font-size: 10px;
+    color: $mut;
+  }
+
+  b {
+    font-size: 13px;
+    font-weight: 900;
+    color: $dark;
+    line-height: 1.2;
+
+    &.pink {
+      color: $p;
+    }
+  }
+}
+
+// ══ CARD 2 ════════════════════════════════════════════════════════════════════
+.gd-c2 {
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.gd-form-back {
+  font-size: 11px;
+  color: $p;
+  font-weight: 600;
+}
+
+.gd-form-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.gd-form-bar {
+  width: 3px;
+  height: 30px;
+  background: $p;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.gd-form-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: $dark;
+}
+
+.gd-form-desc {
+  font-size: 11px;
+  color: $mut;
+  margin-top: 1px;
+}
+
+.gd-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  label {
+    font-size: 12px;
+    font-weight: 700;
+    color: $dark;
+
+    .req {
+      color: $p;
+    }
+  }
+}
+
+.gd-inp {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 100%;
+    height: 34px;
+    padding: 0 32px 0 34px;
+    border: 1.5px solid $bmd;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: inherit;
+    color: $dark;
+    background: $bg;
+    outline: none;
+    box-sizing: border-box;
+    pointer-events: none;
+
+    &::placeholder {
+      color: $mut;
+      font-size: 12px;
+    }
+  }
+}
+
+.gd-ico {
+  position: absolute;
+  left: 10px;
+  color: $mut;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.gd-sfx {
+  position: absolute;
+  right: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: $mid;
+  pointer-events: none;
+}
+
+.gd-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.gd-qchip {
+  padding: 3px 8px;
+  border: 1.5px solid $bmd;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: $body;
+  background: #fff;
+  cursor: default;
+}
+
+.gd-fee-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 11px;
+  color: $mut;
+  line-height: 1.4;
+
+  svg {
+    color: $p;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+// ══ CARD 3 ════════════════════════════════════════════════════════════════════
+.gd-c3 {
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gd-c3-label {
+  font-size: 11px;
+  color: $mut;
+  text-align: center;
+}
+
+.gd-c3-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+// QR tag box (left of step 3)
+.gd-qrb {
+  background: $p10;
+  border: 1.5px solid $pbd;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.gd-qrb-tag {
+  background: $p;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  letter-spacing: .04em;
+}
+
+.gd-bill-img {
+  width: 100%;
+  display: block;
+  height: 160px;
+  object-fit: cover;
+}
+
+.gd-qrb-code {
+  font-size: 9px;
+  color: $mut;
+  text-align: center;
+  padding: 4px;
+  border-top: 1px solid $pbd;
+  background: rgba(255, 255, 255, .8);
+}
+
+// right side of step 3
+.gd-c3-right {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gd-c3-lbl {
+  font-size: 12px;
+  font-weight: 700;
+  color: $dark;
+
+  span {
+    font-size: 10px;
+    color: $mut;
+    font-weight: 500;
+  }
+}
+
+.gd-upload {
+  border: 1.5px dashed $pbd;
+  border-radius: 8px;
+  background: $p10;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+
+  span {
+    font-size: 12px;
+    font-weight: 700;
+    color: $p;
+  }
+
+  small {
+    font-size: 10px;
+    color: $mut;
+  }
+}
+
+.gd-note-box {
+  background: $bg;
+  border: 1.5px solid $bmd;
+  border-radius: 7px;
+  padding: 6px 9px;
+  font-size: 11px;
+  color: $mut;
+  min-height: 32px;
+}
+
+.gd-char-count {
+  font-size: 10px;
+  color: $mut;
+  text-align: right;
+  margin-top: -2px;
+}
+
+// ══ Shared elements ══════════════════════════════════════════════════════════
+// pink button
+.gd-btn-pink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, #f472b6, $p);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(236, 72, 153, .32);
+}
+
+// secure note
+.gd-secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px;
+  color: $mut;
+
+  svg {
+    color: $p;
+  }
+}
+
+// guide list at bottom of each card
+.gd-guide-list {
+  padding: 10px 16px 12px;
+  border-top: 1px solid $bdr;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: auto;
+}
+
+.gd-guide-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  color: $body;
+  line-height: 1.45;
+}
+
+.gd-num {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 50%;
+  background: $p;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+// ── Notice ─────────────────────────────────────────────────────────────────────
+.gd-notice {
+  background: $p10;
+  border-top: 1.5px solid $pbd;
+  padding: 12px 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+
+  @media (max-width: 640px) {
+    padding: 12px 14px;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.gd-notice-ttl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: $dark;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gd-notice-body {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  flex: 1;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+.gd-ni {
+  flex: 1;
+  min-width: 160px;
+  font-size: 12px;
+  color: $body;
+  line-height: 1.55;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.gd-ni-dot {
+  width: 5px;
+  height: 5px;
+  min-width: 5px;
+  border-radius: 50%;
+  background: $p;
+  margin-top: 6px;
+}

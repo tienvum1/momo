@@ -1,422 +1,492 @@
-$pink: #d82d8b;
+// ── Design tokens ─────────────────────────────────────────────────────────────
+$pink: #ec4899;
+$pink-d: #db2777;
 $pink-10: #fdf2f8;
 $pink-20: #fce7f3;
-$bg: #ffffff;
-$card: #ffffff;
-$border: #edf0f7;
-$dark: #1a1a2e;
-$mid: #475569;
-$muted: #94a3b8;
-$r: 8px;
-$shadow: 0 1px 6px rgba(0, 0, 0, .06);
+$pink-bd: #fbcfe8;
+$dark: #111827;
+$body: #374151;
+$muted: #9ca3af;
+$light: #f9fafb;
+$border: #f3f4f6;
+$border-md: #e5e7eb;
+$card-bg: #ffffff;
+$bg: #f8fafc;
+$r: 10px; // card border-radius
+$shadow: 0 1px 6px rgba(0, 0, 0, .06), 0 0 0 1px rgba(0, 0, 0, .03);
 
-// ── States ────────────────────────────────────────────────────────────────────
-.mbd-state {
-  min-height: 60vh;
+// ── Loading / Error ────────────────────────────────────────────────────────────
+.od-center {
+  min-height: calc(100vh - 60px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
+  background: $bg;
   color: $muted;
   font-size: 14px;
+  font-family: 'Inter', sans-serif;
 }
 
-.mbd-spinner {
-  width: 28px;
-  height: 28px;
-  border: 2.5px solid $pink-20;
+.od-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid $pink-20;
   border-top-color: $pink;
   border-radius: 50%;
-  animation: spin .7s linear infinite;
+  animation: od-spin .7s linear infinite;
 }
 
-@keyframes spin {
+@keyframes od-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-.mbd-page {
-  background: $bg;
-  padding: 16px 40px 24px;
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  text-align: left;
+.od-link-back {
+  color: $pink;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 13px;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
-// ── Topbar ────────────────────────────────────────────────────────────────────
-.mbd-topbar {
+// ── Page shell ─────────────────────────────────────────────────────────────────
+.od-page {
+  background: $bg;
+  min-height: calc(100vh - 60px);
+  padding: 28px 32px 48px;
+  box-sizing: border-box;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  color: $body;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: left;
+
+  @media (max-width: 768px) {
+    padding: 16px 14px 40px;
+    gap: 18px;
+  }
+}
+
+// ── TOP HEADER ─────────────────────────────────────────────────────────────────
+.od-header {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.mbd-back {
+.od-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 13px;
-  border: 1.5px solid $pink-20;
-  border-radius: $r;
-  background: $card;
+  padding: 7px 15px;
+  border: 1.5px solid $border-md;
+  border-radius: 999px;
+  background: $card-bg;
   color: $pink;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
   transition: all .2s;
+  font-family: inherit;
 
   &:hover {
-    background: $pink-10;
     border-color: $pink;
+    background: $pink-10;
+    transform: translateX(-2px);
   }
 }
 
-.mbd-title {
-  font-size: 18px;
+.od-title {
+  margin: 0;
+  font-size: 22px;
   font-weight: 800;
   color: $dark;
-  margin: 0;
-}
+  letter-spacing: -.03em;
 
-.mbd-code {
-  color: $pink;
-  font-family: monospace;
-}
-
-// ── Hero ──────────────────────────────────────────────────────────────────────
-.mbd-hero {
-  background: $card;
-  border: 1px solid $border;
-  border-radius: $r;
-  padding: 14px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  box-shadow: $shadow;
-  flex-wrap: wrap;
-}
-
-.mbd-hero-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  .mbd-hero-logo {
-    height: 44px;
-    width: auto;
-    border-radius: $r;
-    flex-shrink: 0;
-  }
-
-  .mbd-hero-sub {
-    font-size: 10px;
-    color: $muted;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    margin: 0 0 3px;
-  }
-
-  .mbd-hero-name {
-    font-size: 17px;
-    font-weight: 900;
-    color: $dark;
-    margin: 0 0 3px;
-  }
-
-  .mbd-hero-phone {
-    font-size: 12px;
-    color: $mid;
-    margin: 0;
-  }
-}
-
-.mbd-hero-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-
-  .mbd-recv-label {
-    font-size: 10px;
-    color: $muted;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    margin: 4px 0 0;
-  }
-
-  .mbd-recv-amount {
-    font-size: 24px;
-    font-weight: 900;
+  &__code {
     color: $pink;
-    margin: 0;
-    line-height: 1.1;
-  }
-
-  .mbd-recv-fee {
-    font-size: 11px;
-    color: $muted;
-    margin: 0;
+    margin-left: 4px;
   }
 }
 
-.mbd-status-pill {
+// Status badge colours
+@mixin badge-color($color, $bg, $border) {
+  color: $color;
+  background: $bg;
+  border: 1.5px solid $border;
+}
+
+.od-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 11px;
+  gap: 5px;
+  padding: 5px 14px;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
+
+  &--green {
+    @include badge-color(#16a34a, #f0fdf4, #86efac);
+  }
+
+  &--amber {
+    @include badge-color(#d97706, #fffbeb, #fde68a);
+  }
+
+  &--red {
+    @include badge-color(#dc2626, #fef2f2, #fca5a5);
+  }
+
+  &--gray {
+    @include badge-color(#64748b, #f8fafc, #cbd5e1);
+  }
 }
 
-// ── Main: 65% left + 35% right ────────────────────────────────────────────────
-.mbd-main {
+// ── MAIN LAYOUT ────────────────────────────────────────────────────────────────
+.od-layout {
   display: grid;
-  grid-template-columns: 65fr 35fr;
-  gap: 12px;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
   align-items: start;
 
-  @media (max-width: 900px) {
+  @media (max-width: 1200px) {
+    grid-template-columns: 320px 1fr;
+  }
+
+  @media (max-width: 960px) {
+    grid-template-columns: 300px 1fr;
+  }
+
+  @media (max-width: 840px) {
     grid-template-columns: 1fr;
   }
 }
 
-.mbd-left {
+// ── SIDEBAR ────────────────────────────────────────────────────────────────────
+.od-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.mbd-right {
+  gap: 16px;
   position: sticky;
-  top: 16px;
+  top: 24px;
 
-  @media (max-width: 900px) {
+  @media (max-width: 840px) {
     position: static;
   }
 }
 
-// ── 3-col inner grid ──────────────────────────────────────────────────────────
-.mbd-grid3 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  align-items: start;
-
-  @media (max-width: 700px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.mbd-col2,
-.mbd-col3 {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-// ── Card ──────────────────────────────────────────────────────────────────────
-.mbd-card {
-  background: $card;
-  border: 1px solid $border;
+// ── GENERIC CARD ───────────────────────────────────────────────────────────────
+.od-card {
+  background: $card-bg;
   border-radius: $r;
   box-shadow: $shadow;
+  border: 1px solid $border;
   overflow: hidden;
+  transition: box-shadow .2s;
 }
 
-.mbd-card-head {
+.od-card__head {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 9px 13px;
-  border-bottom: 1px solid $border;
-  font-size: 12px;
-  font-weight: 800;
+  padding: 14px 18px 10px;
+  font-size: 11px;
+  font-weight: 700;
   color: $pink;
-  background: $pink-10;
+  text-transform: uppercase;
+  letter-spacing: .06em;
 
   svg {
     flex-shrink: 0;
   }
 }
 
-.mbd-card-body {
-  padding: 10px 13px;
+// ── RECIPIENT CARD ─────────────────────────────────────────────────────────────
+.od-recipient-card {
+  overflow: visible; // let status-box show fully
 }
 
-// ── Info rows ─────────────────────────────────────────────────────────────────
-.mbd-row {
+.od-recipient__top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid #f8fafc;
-  gap: 8px;
-
-  &:last-child {
-    border-bottom: none;
-  }
+  gap: 16px;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid $border;
 }
 
-.mbd-row-label {
-  font-size: 12px;
-  color: $muted;
-  font-weight: 400;
+.od-recipient__logo {
+  height: 52px;
+  width: auto;
+  border-radius: 8px;
   flex-shrink: 0;
 }
 
-.mbd-row-value {
-  font-size: 12px;
+.od-recipient__to-label {
+  font-size: 10px;
+  color: $muted;
   font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin: 0 0 3px;
+}
+
+.od-recipient__name {
+  font-size: 18px;
+  font-weight: 800;
   color: $dark;
-  text-align: right;
-
-  &.mono {
-    font-family: monospace;
-  }
-
-  &.pink {
-    color: $pink;
-    font-size: 15px;
-    font-weight: 900;
-  }
+  margin: 0 0 3px;
+  letter-spacing: -.01em;
 }
 
-.mbd-sep {
-  height: 1px;
-  background: $border;
-  margin: 5px 0;
+.od-recipient__phone {
+  font-size: 13px;
+  color: $muted;
+  font-family: monospace;
+  margin: 0;
 }
 
-// ── Timeline ──────────────────────────────────────────────────────────────────
-.mbd-timeline {
+// Amount rows
+.od-amount-rows {
+  padding: 16px 22px;
+  border-bottom: 1px solid $border;
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
-.mbd-step {
+.od-amount-row {
   display: flex;
-  align-items: flex-start;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: $body;
+
+  span:first-child {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  span:last-child {
+    font-weight: 700;
+    text-align: right;
+  }
+
+  &--fee {
+    color: $muted;
+    font-size: 13px;
+
+    span:last-child {
+      font-weight: 500;
+    }
+  }
+}
+
+// Net row
+.od-net-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 22px;
+  border-bottom: 1px solid $border;
+
+  &__label {
+    font-size: 14px;
+    font-weight: 700;
+    color: $body;
+  }
+
+  &__value {
+    font-size: 22px;
+    font-weight: 900;
+    color: $pink;
+    letter-spacing: -.02em;
+  }
+}
+
+// Status box inside recipient card
+.od-status-box {
+  margin: 14px 22px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
   gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+
+  &--green {
+    background: #f0fdf4;
+    color: #16a34a;
+  }
+
+  &--amber {
+    background: #fffbeb;
+    color: #d97706;
+  }
+
+  &--red {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  &--gray {
+    background: #f8fafc;
+    color: #64748b;
+  }
+}
+
+.od-reject-note {
+  padding: 0 22px 14px;
+  margin: 0;
+  font-size: 12px;
+  color: #dc2626;
+  line-height: 1.5;
+}
+
+.od-pay-btn {
+  display: block;
+  width: calc(100% - 44px);
+  margin: 0 22px 20px;
+  padding: 13px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: .01em;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, .35);
+  transition: all .2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, .45);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// ── TIMELINE ───────────────────────────────────────────────────────────────────
+.od-timeline {
+  padding: 8px 18px 16px;
+}
+
+.od-tl-item {
+  display: flex;
+  gap: 12px;
   color: $muted;
+
+  &.done {
+    color: $dark;
+  }
+}
+
+.od-tl-item__dot-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.od-tl-item__dot {
+  color: $muted;
+  line-height: 0;
 
   &.done {
     color: $pink;
   }
 }
 
-.mbd-step-dot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-  padding-top: 1px;
-}
-
-.mbd-step-line {
+.od-tl-item__line {
   width: 2px;
-  height: 18px;
-  background: $border;
+  flex: 1;
+  min-height: 18px;
+  background: $border-md;
   border-radius: 2px;
-  margin: 2px 0;
+  margin: 4px 0;
 
-  .mbd-step.done & {
+  .od-tl-item.done & {
     background: $pink-20;
   }
 }
 
-.mbd-step-text {
+.od-tl-item__text {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex: 1;
-  padding: 1px 0 18px;
-  gap: 6px;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 18px;
 }
 
-.mbd-step:last-child .mbd-step-text {
+.od-tl-item:last-child .od-tl-item__text {
   padding-bottom: 0;
 }
 
-.mbd-step-label {
-  font-size: 12px;
-  font-weight: 600;
+.od-tl-item__label {
+  font-size: 13px;
+  font-weight: 700;
   color: $dark;
 
-  .mbd-step:not(.done) & {
+  .od-tl-item:not(.done) & {
     color: $muted;
   }
 }
 
-.mbd-step-time {
-  font-size: 11px;
-  color: $mid;
-  text-align: right;
-
-  .mbd-step:not(.done) & {
-    color: $muted;
-  }
-}
-
-// ── Status ────────────────────────────────────────────────────────────────────
-.mbd-status-big {
-  font-size: 15px;
-  font-weight: 800;
-}
-
-// ── Footer ────────────────────────────────────────────────────────────────────
-.mbd-footer {
-  background: $pink-10;
-  border: 1px solid $pink-20;
-  border-radius: $r;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.mbd-footer-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-
-  .mbd-footer-title {
-    font-size: 12px;
-    font-weight: 700;
-    color: $dark;
-    margin: 0 0 2px;
-  }
-
-  .mbd-footer-sub {
-    font-size: 11px;
-    color: $mid;
-    margin: 0;
-  }
-}
-
-.mbd-btn-support {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background: $card;
-  border: 1.5px solid $pink-20;
-  border-radius: $r;
+.od-tl-item__time {
   font-size: 12px;
-  font-weight: 700;
+  color: $muted;
+
+  &--pending {
+    opacity: .5;
+  }
+}
+
+// ── SECURITY CARD ──────────────────────────────────────────────────────────────
+.od-security-card {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .od-security-card__inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $body;
+  }
+}
+
+.od-support-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 9px;
+  border: 1.5px solid $pink-bd;
+  border-radius: 999px;
+  background: $card-bg;
   color: $pink;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  white-space: nowrap;
+  font-family: inherit;
   transition: all .2s;
 
   &:hover {
@@ -426,122 +496,238 @@ $shadow: 0 1px 6px rgba(0, 0, 0, .06);
   }
 }
 
-// ── Bill sidebar ──────────────────────────────────────────────────────────────
-.mbd-no-bill {
-  text-align: center;
-  padding: 14px 0;
-  color: $muted;
-  font-size: 12px;
-}
-
-.mbd-bills {
+// ── RIGHT CONTENT ──────────────────────────────────────────────────────────────
+.od-content {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  align-items: center;
+  gap: 20px;
 }
 
-.mbd-bill-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  width: 100%;
+// Two cards side by side
+.od-row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 
-  img {
-    width: 100%;
-    max-width: 180px;
-    aspect-ratio: 9/16;
-    object-fit: cover;
-    border-radius: $r;
-    border: 1px solid $border;
-    box-shadow: $shadow;
-    cursor: zoom-in;
-    transition: transform .2s;
-
-    &:hover {
-      transform: scale(1.02);
-    }
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
   }
 }
 
-.mbd-bill-caption {
-  font-size: 9px;
-  font-weight: 700;
-  color: $muted;
-  text-transform: uppercase;
-  letter-spacing: .06em;
+// ── INFO ROWS inside cards ─────────────────────────────────────────────────────
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid $border;
+  gap: 16px;
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
-.mbd-bill-actions {
+.detail-row__label {
+  font-size: 13px;
+  color: $muted;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.detail-row__value {
+  font-size: 13px;
+  font-weight: 700;
+  color: $dark;
+  text-align: right;
+  word-break: break-all;
+
+  &.mono {
+    font-family: monospace;
+    font-size: 12px;
+    color: $body;
+    font-weight: 600;
+  }
+}
+
+// ── TIMESTAMPS ─────────────────────────────────────────────────────────────────
+.od-timestamps {
+  display: flex;
+  align-items: stretch;
+  padding: 4px 0 4px;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+  }
+}
+
+.od-ts-col {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  margin-top: 8px;
+  gap: 5px;
+  padding: 14px 20px;
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  &__value {
+    font-size: 14px;
+    font-weight: 700;
+    color: $dark;
+    line-height: 1.4;
+  }
 }
 
-.mbd-btn-outline {
+.od-ts-divider {
+  width: 1px;
+  background: $border;
+  align-self: stretch;
+  flex-shrink: 0;
+
+  @media (max-width: 640px) {
+    width: auto;
+    height: 1px;
+  }
+}
+
+// ── BILLS ──────────────────────────────────────────────────────────────────────
+.od-no-bill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 36px 16px;
+  color: $muted;
+  font-size: 13px;
+}
+
+.od-bill-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 18px 10px;
+}
+
+.od-bill-thumb {
+  position: relative;
+  width: 110px;
+  aspect-ratio: 9/14;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: zoom-in;
+  border: 1.5px solid $border-md;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .25s;
+  }
+
+  &:hover img {
+    transform: scale(1.04);
+  }
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .38);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  &:hover &__overlay {
+    opacity: 1;
+  }
+}
+
+.od-bill-actions {
+  display: flex;
+  gap: 10px;
+  padding: 10px 18px 18px;
+}
+
+.od-btn-outline {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 100%;
-  padding: 8px;
-  background: $card;
-  border: 1.5px solid $border;
-  border-radius: $r;
-  font-size: 12px;
+  padding: 10px;
+  background: $card-bg;
+  border: 1.5px solid $border-md;
+  border-radius: 999px;
+  font-size: 13px;
   font-weight: 700;
-  color: $dark;
+  color: $body;
   cursor: pointer;
+  font-family: inherit;
   transition: all .2s;
 
   &:hover {
     border-color: $pink;
     color: $pink;
-    background: $pink-10;
   }
 }
 
-.mbd-btn-primary {
+.od-btn-pink {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 100%;
-  padding: 8px;
-  background: $pink;
+  padding: 10px;
+  background: linear-gradient(135deg, #f472b6, $pink);
   border: none;
-  border-radius: $r;
-  font-size: 12px;
+  border-radius: 999px;
+  font-size: 13px;
   font-weight: 700;
   color: white;
   text-decoration: none;
-  box-sizing: border-box;
   cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, .3);
   transition: all .2s;
-  box-shadow: 0 3px 10px rgba(216, 45, 139, .25);
 
   &:hover {
-    background: #c6287f;
+    background: linear-gradient(135deg, $pink, $pink-d);
     transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(236, 72, 153, .4);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }
 
-// ── Lightbox ──────────────────────────────────────────────────────────────────
-.mbd-lightbox {
+// ── LIGHTBOX ───────────────────────────────────────────────────────────────────
+.od-lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .88);
+  background: rgba(0, 0, 0, .9);
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  animation: mbd-fade .15s ease;
+  backdrop-filter: blur(8px);
+  animation: od-fade .15s ease;
 }
 
-@keyframes mbd-fade {
+@keyframes od-fade {
   from {
     opacity: 0;
   }
@@ -551,40 +737,43 @@ $shadow: 0 1px 6px rgba(0, 0, 0, .06);
   }
 }
 
-.mbd-lightbox-box {
+.od-lightbox__box {
   position: relative;
-  max-width: min(400px, 90vw);
+  max-width: min(460px, 90vw);
 
   img {
     display: block;
     width: 100%;
     max-height: 88vh;
-    border-radius: $r;
+    border-radius: 10px;
     object-fit: contain;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .5);
   }
 }
 
-.mbd-lightbox-close {
+.od-lightbox__close {
   position: absolute;
-  top: -10px;
-  right: -10px;
-  width: 28px;
-  height: 28px;
+  top: -13px;
+  right: -13px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: white;
   border: none;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: $dark;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, .2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
   transition: all .15s;
 
   &:hover {
     background: $pink;
     color: white;
+    transform: scale(1.1);
   }
 }

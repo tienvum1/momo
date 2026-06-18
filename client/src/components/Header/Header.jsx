@@ -30,6 +30,7 @@ const Header = ({ user, handleLogout }) => {
 
           <nav className={`header-nav ${isMenuOpen ? 'mobile-open' : ''}`}>
             <Link to="/" className="nav-item" onClick={() => setIsMenuOpen(false)}>Trang chủ</Link>
+            <Link to="/huong-dan" className="nav-item" onClick={() => setIsMenuOpen(false)}>Hướng dẫn</Link>
           </nav>
         </div>
 

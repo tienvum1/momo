@@ -14,6 +14,7 @@ import BookingPayment from './pages/QRDetail/BookingPayment';
 import Home from './pages/Home/Home';
 import QRDetail from './pages/QRDetail/QRDetail';
 import Profile from './pages/Profile/Profile';
+import Guide from './pages/Guide/Guide';
 import Header from './components/Header/Header';
 import './App.scss'
 
@@ -84,6 +85,7 @@ function App() {
       <LayoutWrapper user={user} handleLogout={handleLogout}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/huong-dan" element={<Guide />} />
           <Route path="/qrs/:id" element={<QRDetail />} />
           <Route
             path="/payment/:bookingId"
