@@ -33,11 +33,18 @@ const Home = () => {
   return (
     <div className="home-container">
       <section className="hero-section">
-        <img src="/banner.png" alt="Banner Credify" className="hero-banner" />
+        <img src="/banner1.png" alt="Banner Credify" className="hero-banner" />
       </section>
 
       <section className="qr-showcase" id="ready-qrs">
-        <h2> QR đang sẵn sàng</h2>
+        <div className="section-heading">
+          <div className="section-heading-badge">
+            <Zap size={14} />
+            <span>Hoạt động</span>
+          </div>
+          <h2>QR đang sẵn sàng</h2>
+          <p>Chọn mã QR phù hợp và tạo đơn chuyển tiền ngay</p>
+        </div>
         {!user ? (
           <div className="login-to-view">
             <h3>Vui lòng đăng nhập</h3>
