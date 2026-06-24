@@ -8,16 +8,10 @@ const Home = () => {
   const [qrs, setQrs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [loginPrompt, setLoginPrompt] = useState(false); // popup nhắc đăng nhập
+  const [pendingQrId, setPendingQrId] = useState(null);  // QR user muốn tạo đơn
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    // Chưa có token → không cần fetch gì cả, ẩn QR ngay
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     const fetchData = async () => {
       try {
         const [qrsRes, userRes] = await Promise.all([
@@ -32,9 +26,18 @@ const Home = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
+
+  // Xử lý khi bấm "Tạo đơn"
+  const handleTaoDon = (qrId) => {
+    if (!user) {
+      setPendingQrId(qrId);
+      setLoginPrompt(true);
+      return;
+    }
+    window.location.href = `/qrs/${qrId}`;
+  };
 
   if (loading) return <div className="home-loading">Đang tải dữ liệu...</div>;
 
@@ -53,13 +56,8 @@ const Home = () => {
           <h2>QR đang sẵn sàng</h2>
           <p>Chọn mã QR phù hợp và tạo đơn chuyển tiền ngay</p>
         </div>
-        {!user ? (
-          <div className="login-to-view">
-            <h3>Vui lòng đăng nhập</h3>
-            <p>Bạn cần đăng nhập tài khoản để xem danh sách thẻ QR và sử dụng dịch vụ.</p>
-            <Link to="/login" className="login-btn">Đăng nhập ngay</Link>
-          </div>
-        ) : qrs.length === 0 ? (
+
+        {qrs.length === 0 ? (
           <div className="no-qrs">Hiện tại chưa có thẻ QR nào sẵn sàng.</div>
         ) : (
           <div className="qr-grid">
@@ -69,23 +67,17 @@ const Home = () => {
               const maxAmount = Math.round(Number(qr.max_amount_per_trans)).toLocaleString('vi-VN');
               return (
                 <div key={qr.id} className="qr-card">
-                  {/* Ảnh full width */}
                   <div className="qr-card-image">
                     <img src={qr.main_image} alt={qr.name || 'QR'} />
                   </div>
 
                   <div className="qr-card-body">
-                    {/* Tên QR */}
                     {qr.name && <h3 className="qr-card-name">{qr.name}</h3>}
 
-                    {/* 2 info cards */}
                     <div className="qr-card-info-row">
-                      {/* Phí giao dịch */}
                       <div className="qr-info-box">
                         <div className="qr-info-box-header">
-                          <span className="qr-info-box-icon">
-                            <BadgePercent size={18} />
-                          </span>
+                          <span className="qr-info-box-icon"><BadgePercent size={18} /></span>
                           <span className="qr-info-box-title">PHÍ GIAO DỊCH</span>
                         </div>
                         <div className="qr-info-box-content">
@@ -100,12 +92,9 @@ const Home = () => {
                         </div>
                       </div>
 
-                      {/* Hạn mức */}
                       <div className="qr-info-box">
                         <div className="qr-info-box-header">
-                          <span className="qr-info-box-icon">
-                            <ShieldCheck size={18} />
-                          </span>
+                          <span className="qr-info-box-icon"><ShieldCheck size={18} /></span>
                           <span className="qr-info-box-title">HẠN MỨC</span>
                         </div>
                         <div className="qr-info-box-content">
@@ -123,10 +112,13 @@ const Home = () => {
                       </div>
                     </div>
 
-                    {/* Nút TẠO ĐƠN */}
-                    <Link to={`/qrs/${qr.id}`} className="qr-card-btn">    
+                    {/* Nút Tạo đơn — intercept nếu chưa đăng nhập */}
+                    <button
+                      className="qr-card-btn"
+                      onClick={() => handleTaoDon(qr.id)}
+                    >
                       Tạo đơn
-                    </Link>
+                    </button>
                   </div>
                 </div>
               );
@@ -134,6 +126,29 @@ const Home = () => {
           </div>
         )}
       </section>
+
+      {/* Modal nhắc đăng nhập */}
+      {loginPrompt && (
+        <div className="login-prompt-overlay" onClick={() => setLoginPrompt(false)}>
+          <div className="login-prompt-modal" onClick={e => e.stopPropagation()}>
+            <button className="login-prompt-close" onClick={() => setLoginPrompt(false)}>×</button>
+            <div className="login-prompt-icon">🔒</div>
+            <h3>Vui lòng đăng nhập</h3>
+            <p>Bạn cần đăng nhập để tạo đơn và sử dụng dịch vụ rút ví trả sau.</p>
+            <div className="login-prompt-actions">
+              <Link
+                to={`/login?redirect=${encodeURIComponent(`/qrs/${pendingQrId}`)}`}
+                className="login-prompt-btn login-prompt-btn--primary"
+              >
+                Đăng nhập ngay
+              </Link>
+              <Link to="/register" className="login-prompt-btn login-prompt-btn--outline">
+                Đăng ký tài khoản
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -332,3 +332,117 @@
     }
   }
 }
+
+// ── Login prompt modal ────────────────────────────────────────────────────────
+.login-prompt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: lp-fade 0.15s ease;
+}
+
+@keyframes lp-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.login-prompt-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 28px 28px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: lp-slide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  h3 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0 0 8px;
+  }
+
+  p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0 0 24px;
+    line-height: 1.6;
+  }
+}
+
+@keyframes lp-slide {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.login-prompt-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #f1f5f9;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all 0.15s;
+
+  &:hover { background: #d82d8b; color: #fff; }
+}
+
+.login-prompt-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.login-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login-prompt-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 0.2s;
+
+  &--primary {
+    background: linear-gradient(135deg, #e83e9a, #d82d8b);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(216, 45, 139, 0.32);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(216, 45, 139, 0.42);
+    }
+  }
+
+  &--outline {
+    border: 1.5px solid #e2e8f0;
+    color: #374151;
+    background: #fff;
+
+    &:hover { border-color: #d82d8b; color: #d82d8b; }
+  }
+}
