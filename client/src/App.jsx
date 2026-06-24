@@ -39,7 +39,8 @@ const ProtectedRoute = ({ user, allowedRoles, children }) => {
 };
 
 const AuthRoute = ({ user, children }) => {
-  if (!user) return <Navigate to="/login" />;
+  const location = useLocation();
+  if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} />;
   return children;
 };
 

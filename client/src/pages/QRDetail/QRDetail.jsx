@@ -89,6 +89,13 @@ const QRDetail = () => {
   };
 
   const handleSubmit = () => {
+    // Chưa đăng nhập → redirect sang login, giữ lại URL hiện tại để quay về sau
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
     setFormError('');
     if (!momoPhone.trim()) { setFormError('Vui lòng nhập số điện thoại MoMo'); return; }
     if (!/^(0[3-9]\d{8})$/.test(momoPhone.trim())) { setFormError('Số điện thoại không hợp lệ'); return; }

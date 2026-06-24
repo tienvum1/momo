@@ -10,6 +10,14 @@ const Home = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    // Chưa có token → không cần fetch gì cả, ẩn QR ngay
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const [qrsRes, userRes] = await Promise.all([

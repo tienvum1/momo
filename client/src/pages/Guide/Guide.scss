@@ -1,677 +1,1090 @@
-// ── Design tokens ─────────────────────────────────────────────────────────────
-$p: #ec4899;
-$pd: #db2777;
-$p10: #fdf2f8;
-$p20: #fce7f3;
-$pbd: #fbcfe8;
-$dark: #1e293b;
-$body: #374151;
-$mid: #64748b;
-$mut: #94a3b8;
-$bdr: #f1f5f9;
-$bmd: #e2e8f0;
-$bg: #f8fafc;
+// ── Tokens ─────────────────────────────────────────────────────────────────
+$pink: #d82d8b;
+$pink-d: #c6287f;
+$pink-l: #fdf2f8;
+$pink-b: #f0d6e8;
+$dark: #0f172a; // slate-900
+$gray: #64748b; // slate-500
+$bdr: #e2e8f0; // slate-200
+$bg: #f8fafc;  // slate-50
 $card: #ffffff;
-$r: 12px;
-$sh: 0 1px 4px rgba(0, 0, 0, .06), 0 0 0 1px rgba(0, 0, 0, .03);
+$r: 16px;
+$sh: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-.gd-page {
-  background: #fff;
+// ── Page ───────────────────────────────────────────────────────────────────
+.gp {
+  background: $bg;
   min-height: calc(100vh - 60px);
   font-family: 'Inter', sans-serif;
+  color: $dark;
   font-size: 13px;
-  color: $body;
   display: flex;
   flex-direction: column;
   text-align: left;
 }
 
-// ── Hero ──────────────────────────────────────────────────────────────────────
-.gd-hero {
-  text-align: center;
-  padding: 28px 24px 20px;
-  background: #fff;
+// ── Hero ───────────────────────────────────────────────────────────────────
+.gp__hero {
+  background: $card;
   border-bottom: 1px solid $bdr;
+  text-align: center;
+  padding: 36px 24px 32px;
   flex-shrink: 0;
 }
 
-.gd-h1 {
-  font-size: 28px;
-  font-weight: 900;
+.gp__h1 {
+  font-size: 32px;
+  font-weight: 800;
   color: $dark;
-  margin: 0 0 6px;
-  letter-spacing: -.03em;
+  letter-spacing: -.02em;
+  margin: 0 0 8px;
 
-  em {
-    font-style: normal;
-    color: $p;
+  span {
+    color: $pink;
   }
 
   @media (max-width: 640px) {
-    font-size: 22px;
+    font-size: 24px;
   }
 }
 
-.gd-sub {
-  font-size: 14px;
-  color: $mut;
-  margin: 0 0 20px;
+.gp__sub {
+  font-size: 15px;
+  color: $gray;
+  margin: 0 0 28px;
+
+  b {
+    color: $pink;
+  }
 }
 
 // step bar
-.gd-stepbar {
+.gp__stepbar {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  max-width: 880px;
+  gap: 16px;
+  max-width: 1200px;
   margin: 0 auto;
+  flex-wrap: wrap;
 }
 
-.gd-arrow {
-  color: $p;
-  flex-shrink: 0;
-}
-
-.gd-step-item {
+.gp__sb-wrap {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  gap: 16px;
+}
+
+.gp__sb-item {
+  display: flex;
+  align-items: center;
   gap: 12px;
-  background: #fff;
-  border: 1.5px solid $bdr;
-  border-radius: 10px;
-  padding: 12px 16px;
-  min-width: 220px;
-  max-width: 260px;
-  flex: 1;
-  box-shadow: $sh;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-width: unset;
+  max-width: 280px;
   text-align: left;
 }
 
-.gd-step-dot {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+.gp__sb-dot {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: $p;
+  background: $pink;
   color: #fff;
-  font-size: 15px;
-  font-weight: 900;
+  font-size: 16px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 10px rgba(236, 72, 153, .35);
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(216, 45, 139, 0.2);
 }
 
-.gd-step-txt {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-
+.gp__sb-txt {
   strong {
-    font-size: 13px;
-    font-weight: 800;
-    color: $dark;
     display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: $dark;
   }
 
   span {
-    font-size: 11px;
-    color: $mut;
-    line-height: 1.45;
     display: block;
+    font-size: 12px;
+    color: $gray;
+    line-height: 1.4;
+    margin-top: 2px;
   }
 }
 
-// ── Grid ──────────────────────────────────────────────────────────────────────
-.gd-grid {
+.gp__arrow {
+  color: $pink;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+// ── Grid ───────────────────────────────────────────────────────────────────
+.gp__grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  padding: 20px 32px;
-  max-width: 1200px;
+  grid-template-columns: repeat(6, 1fr); // 6 columns
+  gap: 24px;
+  padding: 32px;
+  max-width: 1440px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
   flex: 1;
 
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr 1fr;
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+    .gp__col-wrap--wide {
+      grid-column: span 3 !important;
+    }
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    padding: 14px 12px;
+    padding: 16px;
+    gap: 20px;
+    .gp__col-wrap {
+      grid-column: span 1 !important;
+    }
   }
 }
 
-// ── Card ──────────────────────────────────────────────────────────────────────
-.gd-card {
-  background: $card;
-  border: 1px solid $bmd;
-  border-radius: $r;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+.gp__col-wrap {
+  grid-column: span 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+
+  &--wide {
+    grid-column: span 3; // Step 4 spans 3 columns
+  }
 }
 
-.gd-card-hd {
+// ── Step headers (Outside of Cards) ─────────────────────────────────────────
+.gp__col-hd-outside {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 11px 16px;
-  border-bottom: 1px solid $bdr;
-  background: #fff;
+  padding-left: 4px;
+  margin-bottom: 12px;
 }
 
-.gd-badge {
-  background: $p;
+.gp__col-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: $pink;
   color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 3px 9px;
-  border-radius: 5px;
-  letter-spacing: .05em;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(216, 45, 139, 0.15);
 }
 
-.gd-card-name {
-  font-size: 14px;
-  font-weight: 800;
+.gp__col-title {
+  font-size: 15px;
+  font-weight: 700;
   color: $dark;
 }
 
-// ══ CARD 1 ════════════════════════════════════════════════════════════════════
-.gd-c1 {
-  padding: 12px 16px;
+// ── Card ───────────────────────────────────────────────────────────────────
+.gp__card {
+  background: $card;
+  border: 1px solid $bdr;
+  border-radius: $r;
+  box-shadow: $sh;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-// QR frame — no top label, image full width
-.gd-qr-frame {
-  border: 1.5px solid $bmd;
-  border-radius: 8px;
   overflow: hidden;
-  background: $p10;
 }
 
-.gd-qr-img {
-  width: 100%;
-  display: block;
-  max-height: 150px;
-  object-fit: contain;
-  background: $p10;
+.gp__card-hd-mock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid $bdr;
+  background: #f8fafc;
 }
 
-.gd-qr-frame-name {
-  text-align: center;
+.gp__badge {
+  background: $pink;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  letter-spacing: .02em;
+  flex-shrink: 0;
+}
+
+.gp__badge-sep {
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.gp__badge-title {
   font-size: 13px;
   font-weight: 700;
   color: $dark;
-  padding: 6px;
-  background: #fff;
-  border-top: 1px solid $bdr;
 }
 
-// fee + limit boxes
-.gd-boxes {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+// tips outside of cards
+.gp__tips {
+  padding: 16px 4px 0;
+  background: transparent;
+  border-top: none;
+  box-shadow: none;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.gd-box {
-  background: $p10;
-  border: 1.5px solid $pbd;
-  border-radius: 8px;
-  padding: 8px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.gd-box-hd {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 9px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  padding-bottom: 5px;
-  border-bottom: 1px solid $pbd;
-
-  &.pink {
-    color: $p;
-
-    svg {
-      color: $p;
-    }
-  }
-
-  svg {
-    flex-shrink: 0;
-  }
-}
-
-.gd-box-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  color: $body;
-
-  b {
-    color: $p;
-    font-weight: 800;
-    font-size: 12px;
-  }
-}
-
-.gd-box-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-
-  span {
-    font-size: 10px;
-    color: $mut;
-  }
-
-  b {
-    font-size: 13px;
-    font-weight: 900;
-    color: $dark;
-    line-height: 1.2;
-
-    &.pink {
-      color: $p;
-    }
-  }
-}
-
-// ══ CARD 2 ════════════════════════════════════════════════════════════════════
-.gd-c2 {
-  padding: 10px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.gd-form-back {
-  font-size: 11px;
-  color: $p;
-  font-weight: 600;
-}
-
-.gd-form-title-row {
+.gp__tip {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-}
-
-.gd-form-bar {
-  width: 3px;
-  height: 30px;
-  background: $p;
-  border-radius: 3px;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.gd-form-title {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 12px;
   color: $dark;
+  line-height: 1.5;
 }
 
-.gd-form-desc {
-  font-size: 11px;
-  color: $mut;
-  margin-top: 1px;
-}
-
-.gd-field {
+.gp__num {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: $pink;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+// shared button
+.gp__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background: $pink;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(216, 45, 139, 0.2);
+}
+
+.gp__secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 4px;
+  font-size: 11px;
+  color: $gray;
+  padding: 8px 0 2px;
 
-  label {
-    font-size: 12px;
-    font-weight: 700;
-    color: $dark;
-
-    .req {
-      color: $p;
-    }
+  svg {
+    color: $gray;
   }
 }
 
-.gd-inp {
+// ── Card 1: QR Poster ──────────────────────────────────────────────────────
+.gp__qr-wrap {
+  background: $pink-l;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gp__qr-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+// ── Card 2: Form ───────────────────────────────────────────────────────────
+.gp__form {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gp__form-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: $pink;
+  font-weight: 600;
+  padding: 6px 12px;
+  border: 1px solid rgba($pink, 0.2);
+  border-radius: 20px;
+  cursor: default;
+  align-self: flex-start;
+  background: #fff;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.gp__form-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.gp__form-bar {
+  width: 4px;
+  height: 32px;
+  background: $pink;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.gp__form-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: $dark;
+}
+
+.gp__form-sub {
+  font-size: 12px;
+  color: $gray;
+  margin-top: 1px;
+}
+
+.gp__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: $dark;
+  }
+}
+
+.gp__req {
+  color: $pink;
+}
+
+.gp__inp {
   position: relative;
   display: flex;
   align-items: center;
 
   input {
     width: 100%;
-    height: 34px;
-    padding: 0 32px 0 34px;
-    border: 1.5px solid $bmd;
+    height: 40px;
+    padding: 0 12px 0 36px;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 13px;
     font-family: inherit;
     color: $dark;
-    background: $bg;
+    background: #fff;
     outline: none;
     box-sizing: border-box;
     pointer-events: none;
 
     &::placeholder {
-      color: $mut;
-      font-size: 12px;
+      color: #94a3b8;
     }
   }
 }
 
-.gd-ico {
+.gp__ico {
   position: absolute;
-  left: 10px;
-  color: $mut;
-  pointer-events: none;
-  flex-shrink: 0;
+  left: 12px;
+  color: #94a3b8;
 }
 
-.gd-sfx {
+.gp__sfx {
   position: absolute;
-  right: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  color: $mid;
-  pointer-events: none;
+  right: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: $gray;
 }
 
-.gd-quick {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 2px;
+.gp__quick {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
 }
 
-.gd-qchip {
-  padding: 3px 8px;
-  border: 1.5px solid $bmd;
-  border-radius: 999px;
+.gp__chip {
+  text-align: center;
+  padding: 6px 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
   font-size: 11px;
-  font-weight: 700;
-  color: $body;
+  font-weight: 600;
+  color: $dark;
   background: #fff;
+  pointer-events: none;
   cursor: default;
 }
 
-.gd-fee-note {
+.gp__fee-note {
   display: flex;
   align-items: flex-start;
-  gap: 5px;
+  gap: 6px;
   font-size: 11px;
-  color: $mut;
+  color: $gray;
   line-height: 1.4;
+  margin-top: 2px;
 
   svg {
-    color: $p;
+    color: $pink;
     flex-shrink: 0;
     margin-top: 1px;
   }
 }
 
-// ══ CARD 3 ════════════════════════════════════════════════════════════════════
-.gd-c3 {
-  padding: 10px 16px;
+// ── Card 3: Confirm ────────────────────────────────────────────────────────
+.gp__c3 {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gp__c3-lbl {
+  font-size: 12px;
+  color: $gray;
+  text-align: center;
+  margin: 0 0 4px;
+}
+
+.gp__qrb {
+  background: $pink-l;
+  border: 1px solid rgba($pink, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+  width: 70%;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.gp__qrb-tag {
+  background: $pink;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.gp__qrb-img {
+  width: 100%;
+  display: block;
+  height: 140px;
+  object-fit: contain;
+  padding: 8px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.gp__qrb-code {
+  font-size: 10px;
+  font-weight: 600;
+  color: $gray;
+  text-align: center;
+  padding: 6px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.gp__upload-lbl {
+  font-size: 12px;
+  font-weight: 600;
+  color: $dark;
+  margin-top: 4px;
+
+  span {
+    font-size: 11px;
+    color: $gray;
+    font-weight: 400;
+  }
+}
+
+.gp__upload {
+  border: 2px dashed rgba($pink, 0.3);
+  border-radius: 10px;
+  background: $pink-l;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.gp__upload-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  color: $pink;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.gp__upload-cta {
+  font-size: 12px;
+  font-weight: 700;
+  color: $pink;
+}
+
+.gp__upload-hint {
+  font-size: 10px;
+  color: $gray;
+}
+
+.gp__note-wrap {
+  position: relative;
+
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 12px;
+    color: $dark;
+    resize: none;
+    outline: none;
+    background: #fff;
+    font-family: inherit;
+    pointer-events: none;
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+  }
+}
+
+.gp__char {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+// ── Step 4 Layout Refinement ───────────────────────────────────────────────
+.gp__step4-row {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  justify-content: space-between;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+.gp__subcol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; // Prevent content blowout
+}
+
+.gp__subcol-hd {
+  font-size: 13px;
+  font-weight: 700;
+  color: $dark;
+  margin-bottom: 12px;
+  padding-left: 2px;
+}
+
+.gp__subcol-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $pink;
+  opacity: 0.6;
+  padding-bottom: 36px; // Offset center down to line up with mockups instead of full column
+
+  @media (max-width: 768px) {
+    padding: 8px 0;
+    transform: rotate(90deg);
+  }
+}
+
+.gp__subcol-tip {
+  font-size: 12px;
+  color: $gray;
+  line-height: 1.45;
+  text-align: center;
+  margin-top: 16px;
+  padding: 0 8px;
+}
+
+// 4.1 mini app
+.gp__mini-app {
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.gp__mini-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.gp__mini-logo {
+  height: 16px;
+  width: auto;
+}
+
+.gp__mini-nav {
+  display: flex;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: $gray;
+}
+
+.gp__mini-av {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: $pink;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// user block
+.gp__user-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.gp__user-av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: $pink;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gp__user-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: $dark;
+}
+
+.gp__user-email {
+  font-size: 10px;
+  color: $gray;
+}
+
+.gp__user-role {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  background: rgba($pink, 0.1);
+  color: $pink;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-top: 2px;
+  border: 0.5px solid rgba($pink, 0.2);
+}
+
+// menu
+.gp__menu {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 2px;
+}
+
+.gp__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: $gray;
+  position: relative;
+  box-sizing: border-box;
+
+  svg {
+    color: $gray;
+  }
+}
+
+.gp__menu-item--active {
+  background: $pink-l;
+  color: $pink;
+  font-weight: 700;
+  border: 1px solid rgba($pink, 0.2);
+
+  svg {
+    color: $pink;
+  }
+}
+
+.gp__click-hand {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-15deg);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+// 4.2 order list
+.gp__order-list {
+  background: #fff;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.gd-c3-label {
-  font-size: 11px;
-  color: $mut;
-  text-align: center;
-}
-
-.gd-c3-row {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 10px;
-  align-items: start;
-}
-
-// QR tag box (left of step 3)
-.gd-qrb {
-  background: $p10;
-  border: 1.5px solid $pbd;
-  border-radius: 8px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.gd-qrb-tag {
-  background: $p;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  padding: 4px 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  letter-spacing: .04em;
-}
-
-.gd-bill-img {
-  width: 100%;
-  display: block;
-  height: 160px;
-  object-fit: cover;
-}
-
-.gd-qrb-code {
-  font-size: 9px;
-  color: $mut;
-  text-align: center;
-  padding: 4px;
-  border-top: 1px solid $pbd;
-  background: rgba(255, 255, 255, .8);
-}
-
-// right side of step 3
-.gd-c3-right {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.gd-c3-lbl {
+.gp__order-head {
   font-size: 12px;
   font-weight: 700;
   color: $dark;
-
-  span {
-    font-size: 10px;
-    color: $mut;
-    font-weight: 500;
-  }
+  margin-bottom: 4px;
 }
 
-.gd-upload {
-  border: 1.5px dashed $pbd;
+.gp__order-item {
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  background: $p10;
-  padding: 10px 8px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
-
-  span {
-    font-size: 12px;
-    font-weight: 700;
-    color: $p;
-  }
-
-  small {
-    font-size: 10px;
-    color: $mut;
-  }
-}
-
-.gd-note-box {
-  background: $bg;
-  border: 1.5px solid $bmd;
-  border-radius: 7px;
-  padding: 6px 9px;
-  font-size: 11px;
-  color: $mut;
-  min-height: 32px;
-}
-
-.gd-char-count {
-  font-size: 10px;
-  color: $mut;
-  text-align: right;
-  margin-top: -2px;
-}
-
-// ══ Shared elements ══════════════════════════════════════════════════════════
-// pink button
-.gd-btn-pink {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  width: 100%;
-  padding: 11px;
-  background: linear-gradient(135deg, #f472b6, $p);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 800;
-  font-family: inherit;
-  cursor: default;
-  pointer-events: none;
-  box-shadow: 0 4px 14px rgba(236, 72, 153, .32);
-}
-
-// secure note
-.gd-secure {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 4px;
-  font-size: 11px;
-  color: $mut;
 
-  svg {
-    color: $p;
+  &--sel {
+    border-color: $pink;
+    background: $pink-l;
   }
 }
 
-// guide list at bottom of each card
-.gd-guide-list {
-  padding: 10px 16px 12px;
-  border-top: 1px solid $bdr;
+.gp__order-row {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-top: auto;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.gd-guide-item {
+.gp__order-id {
+  font-size: 12px;
+  font-weight: 700;
+  color: $dark;
+}
+
+.gp__order-amt {
+  font-size: 12px;
+  font-weight: 700;
+  color: $pink;
+}
+
+.gp__order-date {
+  font-size: 10px;
+  color: $gray;
+}
+
+.gp__status {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  text-transform: capitalize;
+
+  &--green {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bcf0da;
+  }
+
+  &--red {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fcd3d3;
+  }
+}
+
+// 4.3 detail view
+.gp__detail {
+  background: #fff;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gp__detail-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 6px;
+}
+
+.gp__detail-back {
+  font-size: 11px;
+  color: $pink;
+  font-weight: 700;
+}
+
+.gp__detail-status {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bcf0da;
+}
+
+.gp__detail-hero {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.gp__detail-logo {
+  height: 18px;
+  width: auto;
+}
+
+.gp__detail-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: $dark;
+}
+
+.gp__detail-phone {
+  font-size: 10px;
+  color: $gray;
+}
+
+.gp__detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: $gray;
+  padding: 4px 0;
+
+  b {
+    color: $dark;
+    font-weight: 700;
+  }
+}
+
+.gp__net {
+  color: $pink;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.gp__detail-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 4px 0;
+}
+
+.gp__detail-sec {
+  font-size: 10px;
+  font-weight: 700;
+  color: $gray;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  letter-spacing: .02em;
+}
+
+.gp__sec-dot {
+  color: $pink;
+  font-size: 12px;
+}
+
+.gp__detail-mono {
+  font-family: monospace;
+  font-size: 10px;
+  color: $dark;
+  word-break: break-all;
+}
+
+// ── Notice Footer ──────────────────────────────────────────────────────────
+.gp__notice {
+  background: $bg;
+  padding: 16px 32px 32px;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+.gp__notice-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid rgba($pink, 0.25);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px -2px rgba(216, 45, 139, 0.05), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
+  display: flex;
+  gap: 32px;
+  align-items: stretch;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+.gp__notice-left {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
-  font-size: 12px;
-  color: $body;
+  gap: 16px;
+  flex: 1.2;
+  border-right: 1px solid #f1f5f9;
+  padding-right: 24px;
+
+  @media (max-width: 1024px) {
+    border-right: none;
+    padding-right: 0;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 20px;
+  }
+}
+
+.gp__notice-shield-container {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: $pink-l;
+  border: 1px solid rgba($pink, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gp__notice-shield-icon {
+  color: $pink;
+}
+
+.gp__notice-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gp__notice-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: $pink;
+}
+
+.gp__notice-desc {
+  font-size: 13px;
+  color: $dark;
   line-height: 1.45;
 }
 
-.gd-num {
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
+.gp__notice-right {
+  display: flex;
+  flex: 2;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+.gp__ni {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: $dark;
+  line-height: 1.5;
+
+  b {
+    color: $dark;
+    font-weight: 700;
+  }
+}
+
+.gp__ni-icon {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: $p;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
+  background: $pink-l;
+  border: 1px solid rgba($pink, 0.15);
+  color: $pink;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   margin-top: 1px;
-  flex-shrink: 0;
-}
-
-// ── Notice ─────────────────────────────────────────────────────────────────────
-.gd-notice {
-  background: $p10;
-  border-top: 1.5px solid $pbd;
-  padding: 12px 32px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  flex-wrap: wrap;
-
-  @media (max-width: 640px) {
-    padding: 12px 14px;
-    flex-direction: column;
-    gap: 8px;
-  }
-}
-
-.gd-notice-ttl {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 800;
-  color: $dark;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.gd-notice-body {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  flex: 1;
-
-  @media (max-width: 640px) {
-    flex-direction: column;
-    gap: 6px;
-  }
-}
-
-.gd-ni {
-  flex: 1;
-  min-width: 160px;
-  font-size: 12px;
-  color: $body;
-  line-height: 1.55;
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-.gd-ni-dot {
-  width: 5px;
-  height: 5px;
-  min-width: 5px;
-  border-radius: 50%;
-  background: $p;
-  margin-top: 6px;
 }

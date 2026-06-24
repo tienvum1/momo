@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../../../api/axios';
 import './Login.scss';
 
 const Login = () => {
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +20,7 @@ const Login = () => {
       const res = await api.post('/auth/login', { email: email.trim(), password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      window.location.href = '/';
+      window.location.href = redirectTo;
     } catch (err) {
       setError(err.response?.data?.message || 'Đăng nhập thất bại');
     } finally {
